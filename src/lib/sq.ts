@@ -61,6 +61,10 @@ export const SQ: Record<string, string> = {
   // ---- labels used through constants (section names, modes, groups, columns…)
   "Overview": "Përmbledhje",
   "n/a": "s’ka",
+  "See my result": "Shiko rezultatin tim",
+  "The result also updates by itself as you change anything.": "Rezultati përditësohet edhe vetë sapo ndryshoni diçka.",
+  "A {size} m² home costs about {price}, or {n} years of your pay.": "Një banesë {size} m² kushton rreth {price}, ose {n} vjet të pagës suaj.",
+  "Enter your monthly pay (at least €50) to see a result.": "Shkruani pagën tuaj mujore (të paktën 50 €) për të parë rezultatin.",
   "to": "deri",
   "{from} to {to}": "{from} deri në {to}",
   "Map": "Harta",

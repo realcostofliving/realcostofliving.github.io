@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../lib/state';
 import { fmt, fmtEuroRound, homeCost, obsAtOrBefore, periodLabel, PRICE_BASIS } from '../lib/data';
 import { numLocale, t } from '../lib/i18n';
@@ -30,7 +30,19 @@ export default function Calculator() {
     const o = obsAtOrBefore(income.series[id], filters.year);
     return o ? round50(o[1] / 12) : undefined;
   };
-  const [pay, setPay] = useState<number>(() => typicalPay(country) ?? 800);
+  // The pay box keeps exactly what the person types; the sums use it once it is a real amount.
+  const [payText, setPayText] = useState<string>(() => String(typicalPay(country) ?? 800));
+  const setPay = (v: number) => setPayText(String(v));
+  const typed = Number(payText);
+  const payValid = Number.isFinite(typed) && typed >= 50;
+  const pay = payValid ? typed : 50;
+  const results = useRef<HTMLDivElement>(null);
+  const [flash, setFlash] = useState(false);
+  const showResult = () => {
+    results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1400);
+  };
   const [size, setSize] = useState(70);
   const [save, setSave] = useState(30);
   const [rate, setRate] = useState(5);
@@ -96,7 +108,18 @@ export default function Calculator() {
           </label>
           <label className="field">
             <span className="field-label">{t('Your monthly pay after tax, in €')}</span>
-            <input className="calc-num" type="number" min={50} max={50000} step={50} value={pay} onChange={(e) => setPay(Math.max(50, +e.target.value || 50))} />
+            <input
+              className="calc-num"
+              type="number"
+              inputMode="numeric"
+              min={50}
+              max={50000}
+              step={50}
+              value={payText}
+              onChange={(e) => setPayText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') showResult(); }}
+              aria-invalid={!payValid}
+            />
           </label>
           <div className="calc-chips">
             {typical && <button className="pill sm" onClick={() => setPay(typical)}>{t('Median income per person: {v}', { v: euro(typical) })}</button>}
@@ -115,10 +138,20 @@ export default function Calculator() {
             <Slider label={t('Deposit')} value={deposit} min={0} max={50} step={5} unit="%" onChange={setDeposit} />
             <p className="calc-note">{t('These are your assumptions, not official rates. Banks set their own rates and lending rules.')}</p>
           </details>
+          {home && payValid && (
+            <p className="calc-preview">
+              {t('A {size} m² home costs about {price}, or {n} years of your pay.', { size, price: fmtEuroRound(price), n: fmt(yearsFull, 1) })}
+            </p>
+          )}
+          {!payValid && <p className="calc-warn">{t('Enter your monthly pay (at least €50) to see a result.')}</p>}
+          <button className="btn calc-go" onClick={showResult} disabled={!payValid || !home}>
+            {t('See my result')} <span aria-hidden="true">↓</span>
+          </button>
+          <p className="calc-note">{t('The result also updates by itself as you change anything.')}</p>
         </div>
 
         {home && (
-          <div className="calc-results">
+          <div className={`calc-results ${flash ? 'flash' : ''} ${payValid ? '' : 'faded'}`} ref={results}>
             <div className="card calc-hero">
               <p className="eyebrow"><Flag id={country} /> {countryName(country)} · {home.year}</p>
               <p className="calc-big">{fmtEuroRound(price)}</p>
