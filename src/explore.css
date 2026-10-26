@@ -119,3 +119,5 @@ kbd { font-family: var(--sans); font-size: 11px; border: 1px solid var(--rule-2)
   .finder-facts { display: none; }
   .finder-backdrop { padding-top: 4vh; }
 }
+
+.multiple-note { font-size: 11.5px; color: var(--ink-3); margin: 4px 0 6px; line-height: 1.35; }
