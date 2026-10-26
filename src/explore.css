@@ -191,4 +191,25 @@ kbd { font-family: var(--sans); font-size: 11px; border: 1px solid var(--rule-2)
 .calc-results.faded { opacity: 0.45; }
 .calc-results.flash .calc-hero { animation: calc-flash 1.4s ease-out; }
 @keyframes calc-flash { 0% { box-shadow: 0 0 0 0 rgba(200, 85, 61, 0.55); } 100% { box-shadow: 0 0 0 14px rgba(200, 85, 61, 0); } }
-@media (min-width: 901px) { .calc-go span { display: inline-block; transform: rotate(-90deg); } }
+
+/* calculator: result card and a result column that stays in view */
+.result-card { width: min(520px, 100%); max-height: 86vh; overflow-y: auto; background: var(--surface); border-radius: 12px; box-shadow: 0 24px 64px rgba(29, 42, 68, 0.3); padding: 20px 24px 22px; border-top: 4px solid var(--terracotta); animation: pop-in 0.18s ease-out; }
+.result-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.result-head .eyebrow { display: flex; align-items: center; gap: 6px; margin: 0; }
+.result-title { font-size: 24px; margin: 6px 0 2px; }
+.result-pay { font-size: 14px; color: var(--ink-3); margin: 0 0 10px; }
+.result-list { list-style: none; padding: 0; margin: 14px 0 10px; border-top: 1px solid var(--rule); }
+.result-list li { display: grid; grid-template-columns: 112px 1fr; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.result-list strong { font-family: var(--serif); font-size: 21px; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.result-list span { font-size: 13.5px; color: var(--ink-2); }
+.result-verdict { margin: 4px 0 14px; }
+.result-verdict .verdict { margin-left: 0; font-size: 13px; padding: 3px 10px; }
+.result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.result-actions .calc-go { flex: 1; width: auto; }
+@media (min-width: 901px) {
+  .calc-results { position: sticky; top: calc(var(--fb-h, 120px) + 14px); }
+}
+@media (max-width: 480px) {
+  .result-list li { grid-template-columns: 1fr; gap: 2px; }
+  .result-card { padding: 16px 16px 18px; }
+}

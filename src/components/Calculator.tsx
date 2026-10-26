@@ -38,7 +38,11 @@ export default function Calculator() {
   const pay = payValid ? typed : 50;
   const results = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(false);
-  const showResult = () => {
+  // The button opens a result card right where you are, so there is always something to see.
+  const [open, setOpen] = useState(false);
+  const showResult = () => { if (payValid) setOpen(true); };
+  const showDetails = () => {
+    setOpen(false);
     results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setFlash(true);
     setTimeout(() => setFlash(false), 1400);
@@ -145,7 +149,7 @@ export default function Calculator() {
           )}
           {!payValid && <p className="calc-warn">{t('Enter your monthly pay (at least €50) to see a result.')}</p>}
           <button className="btn calc-go" onClick={showResult} disabled={!payValid || !home}>
-            {t('See my result')} <span aria-hidden="true">↓</span>
+            {t('See my result')}
           </button>
           <p className="calc-note">{t('The result also updates by itself as you change anything.')}</p>
         </div>
@@ -180,6 +184,25 @@ export default function Calculator() {
         )}
       </div>
 
+      {open && home && (
+        <ResultCard
+          onClose={() => setOpen(false)}
+          onDetails={showDetails}
+          country={country}
+          countryLabel={countryName(country)}
+          year={home.year}
+          lines={[
+            [fmtEuroRound(price), t('for a {size} m² home at about {m2} per m²', { size, m2: euro(home.perM2) })],
+            [`${fmt(yearsFull, 1)} ${t('years')}`, t('of your full pay, if you spent nothing else')],
+            [`${fmt(yearsSaving, 1)} ${t('years')}`, t('of saving {pct}% of your pay to buy it outright', { pct: save })],
+            [`${euro(monthly)}`, t('a month with a mortgage over {n} years, which is {pct}% of your pay.', { n: term, pct: fmt(share, 0) })],
+            [t('≈ {n} m²', { n: fmt(affordableM2, 0) }), t('is what you could afford if a third of your pay goes on the mortgage.')],
+          ]}
+          verdict={verdict as [string, string]}
+          payLabel={t('With a pay of {pay} a month in {country}', { pay: euro(pay), country: countryName(country) })}
+        />
+      )}
+
       <div className="card chart-card">
         <div className="chart-head">
           <div>
@@ -191,6 +214,51 @@ export default function Calculator() {
         <p className="caption">{t('This assumes you earn the same pay everywhere. In reality pay differs a lot between countries, so use it to compare prices, not lives. Prices are national averages, mostly asking prices for new homes, and are not official statistics.')}</p>
       </div>
     </section>
+  );
+}
+
+function ResultCard({ onClose, onDetails, country, countryLabel, year, lines, verdict, payLabel }: {
+  onClose: () => void;
+  onDetails: () => void;
+  country: string;
+  countryLabel: string;
+  year: number;
+  lines: [string, string][];
+  verdict: [string, string];
+  payLabel: string;
+}) {
+  const closeBtn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    closeBtn.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, [onClose]);
+  const [first, ...rest] = lines;
+  return (
+    <div className="finder-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
+        <div className="result-head">
+          <p className="eyebrow"><Flag id={country} /> {countryLabel} · {year}</p>
+          <button ref={closeBtn} className="finder-close" onClick={onClose} aria-label={t('Close')}>✕</button>
+        </div>
+        <h3 id="result-title" className="result-title">{t('Your result')}</h3>
+        <p className="result-pay">{payLabel}</p>
+        <p className="calc-big">{first[0]}</p>
+        <p className="calc-sub">{first[1]}</p>
+        <ul className="result-list">
+          {rest.map(([big, text], i) => (
+            <li key={i}><strong>{big}</strong> <span>{text}</span></li>
+          ))}
+        </ul>
+        <p className="result-verdict"><span className={`verdict ${verdict[0]}`}>{verdict[1]}</span></p>
+        <div className="result-actions">
+          <button className="btn calc-go" onClick={onDetails}>{t('See all the details')}</button>
+          <button className="btn btn-ghost" onClick={onClose}>{t('Close')}</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
