@@ -38,7 +38,8 @@ export function lineSeries(ind: Indicator, ids: string[], mode: ValueMode, baseY
   ids.forEach((id, i) => {
     const s = ind.series[id];
     const d = s ? toData(s) : [];
-    if (!d.some(Boolean)) missing.push(name(id));
+    // Only report "no data" when the source has nothing; a missing base year is reported separately.
+    if (!s?.length) missing.push(name(id));
     out.push({
       name: name(id),
       type: 'line',

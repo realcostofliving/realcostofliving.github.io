@@ -128,7 +128,7 @@ export default function Methodology() {
       <section id="licences" className="method-section">
         <h2>Licences and reuse</h2>
         <ul>
-          <li>Eurostat data: © European Union, reused under the <a href="https://ec.europa.eu/eurostat/about-us/policies/copyright" target="_blank" rel="noreferrer">Eurostat copyright notice</a> (CC BY 4.0).</li>
+          <li>Eurostat data: © European Union, reused under the <a href="https://ec.europa.eu/eurostat/web/main/help/copyright-notice" target="_blank" rel="noreferrer">Eurostat copyright notice</a> (CC BY 4.0).</li>
           <li>OECD data: <a href="https://www.oecd.org/en/about/terms-conditions.html" target="_blank" rel="noreferrer">OECD terms and conditions</a> (CC BY 4.0).</li>
           <li>BIS data: <a href="https://www.bis.org/terms_statistics.htm" target="_blank" rel="noreferrer">BIS terms of use for statistics</a>.</li>
           <li>World Bank data: <a href="https://datacatalog.worldbank.org/public-licenses" target="_blank" rel="noreferrer">CC BY 4.0</a>.</li>
