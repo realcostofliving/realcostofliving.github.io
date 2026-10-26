@@ -9,6 +9,7 @@ import { useApp } from '../lib/state';
 import { describeFlag, displayObs, fmt, fmtEuroRound, fmtSigned, fmtValue, homeCost, inRegion, obsAt, PRICE_BASIS, previousObs, sourceName, TYPICAL_HOME_M2 } from '../lib/data';
 import { colorScale } from '../lib/scales';
 import Flag from './Flag';
+import { numLocale, t } from '../lib/i18n';
 
 type F = Feature<Geometry, { id: string; covered: number; name?: string }>;
 
@@ -27,7 +28,7 @@ const LABEL_AT: Record<string, [number, number]> = {
 };
 
 function labelText(ind: { id: string; kind: string; decimals: number; unitShort: string }, v: number): string {
-  if (ind.id === 'price_m2') return `€${Math.round(v).toLocaleString('en-GB')}`;
+  if (ind.id === 'price_m2') return `€${Math.round(v).toLocaleString(numLocale())}`;
   const u = ind.unitShort.trim() === '%' ? '%' : '';
   const d = Math.abs(v) >= 100 ? 0 : ind.decimals;
   return ind.kind === 'rate' ? fmtSigned(v, d, u) : fmt(v, d, u);
@@ -116,7 +117,7 @@ export default function EuropeMap() {
 
   return (
     <div className="map-wrap" ref={wrap} onMouseLeave={() => setHover(null)}>
-      <svg ref={svgRef} width={size.w} height={size.h} viewBox={`0 0 ${size.w} ${size.h}`} className="map" role="group" aria-label={`Map of Europe: ${indicator.label}, ${year}. Use Tab to move between countries and Enter to select.`}>
+      <svg ref={svgRef} width={size.w} height={size.h} viewBox={`0 0 ${size.w} ${size.h}`} className="map" role="group" aria-label={t('Map of Europe: {name}, {year}. Use Tab to move between countries and Enter to select.', { name: indicator.label, year })}>
         <defs>
           <pattern id="nodata" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="6" height="6" fill="#f3efe7" />
@@ -142,7 +143,7 @@ export default function EuropeMap() {
                 tabIndex={dim ? -1 : 0}
                 role="button"
                 aria-pressed={sel}
-                aria-label={`${name}: ${v === undefined ? 'data unavailable' : fmtValue(indicator, v)}`}
+                aria-label={`${name}: ${v === undefined ? t('data unavailable') : fmtValue(indicator, v)}`}
                 onMouseMove={(e) => onMove(id, e)}
                 onFocus={(e) => { if (e.currentTarget.matches(':focus-visible')) onFocus(id, c as [number, number]); }}
                 onBlur={() => setHover(null)}
@@ -175,17 +176,17 @@ export default function EuropeMap() {
           {showLabels && <MapLabels shapes={shapes} projection={projection} k={k} valueOf={valueOf} regionIds={regionIds} />}
         </g>
       </svg>
-      <div className="map-controls" role="group" aria-label="Map zoom">
-        <button onClick={() => zoomBy(1.6)} aria-label="Zoom in">+</button>
-        <button onClick={() => zoomBy(1 / 1.6)} aria-label="Zoom out">−</button>
-        <button onClick={() => zoomTo(null)} aria-label="Reset zoom" className="txt">Europe</button>
-        <button onClick={() => zoomTo(WB_IDS)} className="txt">Balkans</button>
+      <div className="map-controls" role="group" aria-label={t('Map zoom')}>
+        <button onClick={() => zoomBy(1.6)} aria-label={t('Zoom in')}>+</button>
+        <button onClick={() => zoomBy(1 / 1.6)} aria-label={t('Zoom out')}>−</button>
+        <button onClick={() => zoomTo(null)} aria-label={t('Reset zoom')} className="txt">{t('Europe')}</button>
+        <button onClick={() => zoomTo(WB_IDS)} className="txt">{t('Balkans')}</button>
         <button onClick={() => setLabelPref(!showLabels)} className={`txt ${showLabels ? 'on' : ''}`} aria-pressed={showLabels}>
-          {showLabels ? 'Hide values' : 'Show values'}
+          {showLabels ? t('Hide values') : t('Show values')}
         </button>
-        {filters.focus && <button onClick={() => set({ focus: null })} className="txt">Clear selection</button>}
+        {filters.focus && <button onClick={() => set({ focus: null })} className="txt">{t('Clear selection')}</button>}
       </div>
-      <p className="map-hint">Drag to pan · Ctrl + scroll or buttons to zoom</p>
+      <p className="map-hint">{t('Drag to pan · Ctrl + scroll or buttons to zoom')}</p>
       {hover && <MapTooltip id={hover.id} x={hover.x} y={hover.y} w={size.w} h={size.h} />}
     </div>
   );
@@ -231,8 +232,10 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
   const extra = indicator.extra?.[id];
   const bench = indicator.benchmarkSeries ? obsAt(indicator.benchmarkSeries, year) : undefined;
   const last = series?.[series.length - 1];
-  const flags = describeFlag(o?.[2]);
-  const status = !o ? 'Missing' : flags.includes('provisional') ? 'Provisional' : flags.includes('estimated') ? 'Estimated' : 'Actual';
+  const fl = o?.[2] ?? '';
+  const statusKey = !o ? 'missing' : fl.includes('p') ? 'provisional' : fl.includes('e') ? 'estimated' : 'actual';
+  const status = t({ missing: 'Missing', provisional: 'Provisional', estimated: 'Estimated', actual: 'Actual' }[statusKey]);
+  const otherFlags = describeFlag(fl.replace(/[pe]/g, ''));
   const src = indicator.countrySource[id];
   const rate = indicator.kind === 'rate';
   const left = x > w - 290 ? Math.max(4, x - 280) : x + 16;
@@ -243,7 +246,7 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
       <div className="tt-head">
         <Flag id={id} size="md" /> <strong>{countryName(id)}</strong>
       </div>
-      <div className="tt-ind">{indicator.short} · {o && o[0] !== year ? `${o[0]} (latest available)` : year}</div>
+      <div className="tt-ind">{indicator.short} · {o && o[0] !== year ? `${o[0]} (${t('latest available')})` : year}</div>
       {o ? (
         <div className="tt-value">
           {rate ? fmtSigned(o[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, o[1])}
@@ -251,48 +254,48 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
         </div>
       ) : (
         <div className="tt-value tt-na">
-          Data unavailable
-          <span className="tt-unit">{last ? `Latest available: ${fmtValue(indicator, last[1])} (${last[0]})` : 'Not covered by this source'}</span>
+          {t('Data unavailable')}
+          <span className="tt-unit">{last ? t('Latest available: {v} ({year})', { v: fmtValue(indicator, last[1]), year: last[0] }) : t('Not covered by this source')}</span>
         </div>
       )}
       {home && (
         <div className="tt-home">
-          A {TYPICAL_HOME_M2} m² home: <strong>about {fmtEuroRound(home.price)}</strong>
-          {home.years !== undefined && <span>≈ {fmt(home.years, 1)} years of a typical person’s disposable income</span>}
+          {t('A {size} m² home:', { size: TYPICAL_HOME_M2 })} <strong>{t('about {v}', { v: fmtEuroRound(home.price) })}</strong>
+          {home.years !== undefined && <span>{t('≈ {n} years of a typical person’s disposable income', { n: fmt(home.years, 1) })}</span>}
         </div>
       )}
       <dl className="tt-rows">
         {extra?.basis && (
           <div>
-            <dt>Basis</dt>
-            <dd>{PRICE_BASIS[extra.basis] ?? extra.basis}</dd>
+            <dt>{t('Basis')}</dt>
+            <dd>{t(PRICE_BASIS[extra.basis] ?? extra.basis)}</dd>
           </div>
         )}
         {extra?.change !== undefined && (
           <div>
-            <dt>Change vs {(o?.[0] ?? year) - 1}</dt>
+            <dt>{t('Change vs {year}', { year: (o?.[0] ?? year) - 1 })}</dt>
             <dd>{fmtSigned(extra.change, 1, '%')}</dd>
           </div>
         )}
         {o && prev && (
           <div>
-            <dt>Change vs {prev[0]}{prev[0] !== year - 1 ? ' (gap)' : ''}</dt>
+            <dt>{t('Change vs {year}', { year: prev[0] })}{prev[0] !== year - 1 ? ` (${t('gap')})` : ''}</dt>
             <dd>{fmtSigned(o[1] - prev[1], indicator.decimals, deltaUnit)}</dd>
           </div>
         )}
         {bench && filters.benchmark && (
           <div>
-            <dt>{indicator.benchmarkId === 'EA' ? 'Euro area' : 'EU-27'}</dt>
+            <dt>{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27')}</dt>
             <dd>{rate ? fmtSigned(bench[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, bench[1])}</dd>
           </div>
         )}
         <div>
-          <dt>Status</dt>
-          <dd><span className={`status status-${status.toLowerCase()}`}>{status}</span>{flags.filter((f) => f !== 'provisional' && f !== 'estimated').map((f) => ` · ${f}`)}</dd>
+          <dt>{t('Status')}</dt>
+          <dd><span className={`status status-${statusKey}`}>{status}</span>{otherFlags.map((f) => ` · ${f}`)}</dd>
         </div>
       </dl>
-      {extra?.note && <div className="tt-note">{extra.note.replace('EUR ', '€').replace('/m2', '/m²')}</div>}
-      {src && <div className="tt-src">{sourceName(data, src.s)}{src.d ? ' · derived' : ''}{indicator.id === 'price_m2' && src.s.startsWith('deloitte') ? ' · not official statistics' : ''}</div>}
+      {extra?.note && <div className="tt-note">{t(extra.note.replace('EUR ', '€').replace('/m2', '/m²'))}</div>}
+      {src && <div className="tt-src">{sourceName(data, src.s)}{src.d ? ` · ${t('derived')}` : ''}{indicator.id === 'price_m2' && src.s.startsWith('deloitte') ? ` · ${t('not official statistics')}` : ''}</div>}
     </div>
   );
 }

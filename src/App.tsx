@@ -8,6 +8,8 @@ import KpiCards from './components/KpiCards';
 import MapSection from './components/MapSection';
 import StartHere from './components/StartHere';
 import CountryTable from './components/CountryTable';
+import Calculator from './components/Calculator';
+import { initialLang, localize, rememberLang, setLang as applyLang, t, type Lang } from './lib/i18n';
 import TrendExplorer from './components/TrendExplorer';
 import Comparison from './components/Comparison';
 import Affordability from './components/Affordability';
@@ -29,24 +31,29 @@ export default function App() {
   if (error) {
     return (
       <div className="boot">
-        <p className="boot-title">The data could not be loaded.</p>
+        <p className="boot-title">{t('The data could not be loaded.')}</p>
         <p>{error}</p>
-        <button className="btn" onClick={() => location.reload()}>Try again</button>
+        <button className="btn" onClick={() => location.reload()}>{t('Try again')}</button>
       </div>
     );
   }
   if (!loaded) {
     return (
       <div className="boot" aria-busy="true">
-        <p className="boot-title">Europe: The Real Cost of Living</p>
-        <p>Loading official statistics…</p>
+        <p className="boot-title">{t('Europe: The Real Cost of Living')}</p>
+        <p>{t('Loading official statistics…')}</p>
       </div>
     );
   }
-  return <Loaded data={loaded.data} topo={loaded.topo} />;
+  return <Loaded raw={loaded.data} topo={loaded.topo} />;
 }
 
-function Loaded({ data, topo }: { data: Dataset; topo: any }) {
+function Loaded({ raw, topo }: { raw: Dataset; topo: any }) {
+  const [lang, setLangState] = useState<Lang>(() => { const l = initialLang(); applyLang(l); return l; });
+  const setLang = useCallback((l: Lang) => { applyLang(l); rememberLang(l); setLangState(l); }, []);
+  // Country, region and indicator texts in the chosen language.
+  const data = useMemo(() => localize(raw, lang), [raw, lang]);
+  const langQuery = (q: string) => (lang === 'sq' ? (q ? `${q}&lang=sq` : '?lang=sq') : q);
   const defaults = useMemo(() => defaultFilters(data), [data]);
   const [filters, setFilters] = useState<Filters>(() => filtersFromHash(data, location.hash));
   const [page, setPage] = useState<Page>(() => pageFromHash(location.hash));
@@ -65,13 +72,13 @@ function Loaded({ data, topo }: { data: Dataset; topo: any }) {
   // Keep the URL in sync so any view can be shared.
   useEffect(() => {
     if (page !== 'dashboard') return;
-    const next = `#/${filtersToQuery(filters, defaults)}`;
+    const next = `#/${langQuery(filtersToQuery(filters, defaults))}`;
     if (location.hash !== next && !(location.hash === '' && next === '#/')) {
       skipHash.current = true;
       history.replaceState(null, '', next);
       skipHash.current = false;
     }
-  }, [filters, defaults, page]);
+  }, [filters, defaults, page, lang]);
 
   useEffect(() => {
     if (page === 'methodology') window.scrollTo({ top: 0 });
@@ -113,16 +120,18 @@ function Loaded({ data, topo }: { data: Dataset; topo: any }) {
       reset,
       indicator: byId.get(filters.indicator)!,
       ind: (id: string) => byId.get(id)!,
-      countryName: (id: string) => (id === 'EU27' ? 'EU-27' : id === 'EA' ? 'Euro area' : names.get(id) ?? id),
+      countryName: (id: string) => (id === 'EU27' ? t('EU-27') : id === 'EA' ? t('Euro area') : names.get(id) ?? id),
       selectCountry,
-      dashHref: `#/${filtersToQuery(filters, defaults)}`,
+      dashHref: `#/${langQuery(filtersToQuery(filters, defaults))}`,
+      lang,
+      setLang,
     }),
-    [data, topo, filters, set, reset, byId, names, selectCountry, defaults],
+    [data, topo, filters, set, reset, byId, names, selectCountry, defaults, lang, setLang],
   );
 
   return (
-    <Ctx.Provider value={ctx}>
-      <a className="skip" href="#main">Skip to content</a>
+    <Ctx.Provider value={ctx} key={lang}>
+      <a className="skip" href="#main">{t('Skip to content')}</a>
       <Header page={page} />
       {page === 'dashboard' ? (
         <>
@@ -132,6 +141,7 @@ function Loaded({ data, topo }: { data: Dataset; topo: any }) {
             <KpiCards />
             <MapSection />
             <CountryTable />
+            <Calculator />
             <TrendExplorer />
             <Comparison />
             <Affordability />

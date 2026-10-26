@@ -6,8 +6,9 @@ import EuropeMap from './EuropeMap';
 import CountryPanel from './CountryPanel';
 import { IndicatorSelect } from './FilterBar';
 import Info from './Info';
+import { dateLocale, t } from '../lib/i18n';
 
-const QUICK = ['price_m2', 'hpi_growth', 'hpi', 'rent_growth', 'rent_index', 'pti', 'overburden', 'inflation', 'aic_pps'];
+const QUICK = ['price_m2', 'hpi_growth', 'hpi', 'rent_growth', 'pti', 'overburden', 'living_with_parents', 'min_wage', 'inflation'];
 
 export default function MapSection() {
   const { data, filters, set, indicator } = useApp();
@@ -29,16 +30,16 @@ export default function MapSection() {
   useEffect(() => { if (playing && filters.year >= last) setPlaying(false); }, [playing, filters.year, last]);
 
   const scale = colorScale(indicator);
-  const isIndex = indicator.unit.startsWith('Index') && indicator.indexBase;
+  const isIndex = !!indicator.indexBase;
 
   return (
     <section id="map" className="section" aria-labelledby="map-title">
       <div className="section-head">
-        <p className="eyebrow">The map</p>
-        <h2 id="map-title">Where is living getting more expensive?</h2>
-        <p className="lede">Pick a measure, then move through the years. Click any country to see its story in detail.</p>
+        <p className="eyebrow">{t('The map')}</p>
+        <h2 id="map-title">{t('Where is living getting more expensive?')}</h2>
+        <p className="lede">{t('Pick a measure, then move through the years. Click any country to see its story in detail.')}</p>
       </div>
-      <div className="quick" role="toolbar" aria-label="Map indicator">
+      <div className="quick" role="toolbar" aria-label={t('Map indicator')}>
         {QUICK.map((id) => {
           const ind = data.indicators.find((i) => i.id === id)!;
           return (
@@ -47,7 +48,7 @@ export default function MapSection() {
             </button>
           );
         })}
-        <div className="quick-more"><IndicatorSelect label="More measures" /></div>
+        <div className="quick-more"><IndicatorSelect label={t('More measures')} /></div>
       </div>
       <div className="map-grid">
         <div className="map-card card">
@@ -64,7 +65,7 @@ export default function MapSection() {
           </div>
           <EuropeMap />
           <div className="map-foot">
-            <div className="legend" aria-label="Colour legend">
+            <div className="legend" aria-label={t('Colour legend')}>
               {scale.bins.map((b, i) => (
                 <span key={i} className="legend-item">
                   <span className="legend-swatch" style={{ background: b.color }} />
@@ -75,12 +76,12 @@ export default function MapSection() {
               ))}
               <span className="legend-item">
                 <span className="legend-swatch nodata" style={{ background: NO_DATA }} />
-                <span className="legend-label">No data</span>
+                <span className="legend-label">{t('No data')}</span>
               </span>
               <span className="legend-unit">{indicator.unitShort.trim() || indicator.unit}</span>
             </div>
             <div className="timeline">
-              <button className="play" onClick={() => { if (!playing && filters.year >= last) set({ year: first }); setPlaying((p) => !p); }} aria-label={playing ? 'Pause animation' : 'Play through the years'}>
+              <button className="play" onClick={() => { if (!playing && filters.year >= last) set({ year: first }); setPlaying((p) => !p); }} aria-label={playing ? t('Pause animation') : t('Play through the years')}>
                 {playing ? '❚❚' : '▶'}
               </button>
               <input
@@ -89,18 +90,18 @@ export default function MapSection() {
                 max={last}
                 value={filters.year}
                 onChange={(e) => { setPlaying(false); set({ year: +e.target.value }); }}
-                aria-label="Year"
+                aria-label={t('Year')}
                 aria-valuetext={String(filters.year)}
               />
               <span className="timeline-year">{filters.year}</span>
             </div>
             <p className="map-note">
-              {covered} of {ids.length} countries have data for {filters.year}. Hatched countries have no comparable data — they are not low values.
-              {isIndex ? ` An index shows change since ${indicator.indexBase}, not which country is more expensive.` : ''}
-              {indicator.snapshot ? ' Countries without a figure for the chosen year show their latest earlier one, marked in the tooltip.' : ''}
-              {indicator.id === 'price_m2' ? ' Prices per m² are compiled by Deloitte from national sources (Montenegro: Monstat) — they are not official, harmonised statistics.' : ''}
-              {indicator.stale && indicator.retrievedAt ? ` The source was unavailable at the last refresh; values were retrieved on ${new Date(indicator.retrievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
-              {last < data.lastYear ? ` Annual data end in ${last}; 2026 readings appear in the country panel where published.` : ''}
+              {t('{n} of {total} countries have data for {year}.', { n: covered, total: ids.length, year: filters.year })} {t('Hatched countries have no comparable data — they are not low values.')}
+              {isIndex ? ` ${t('An index shows change since {year}, not which country is more expensive.', { year: indicator.indexBase! })}` : ''}
+              {indicator.snapshot ? ` ${t('Countries without a figure for the chosen year show their latest earlier one, marked in the tooltip.')}` : ''}
+              {indicator.id === 'price_m2' ? ` ${t('Prices per m² are compiled by Deloitte from national sources (Montenegro: Monstat) — they are not official, harmonised statistics.')}` : ''}
+              {indicator.stale && indicator.retrievedAt ? ` ${t('The source was unavailable at the last refresh; values were retrieved on {date}.', { date: new Date(indicator.retrievedAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) })}` : ''}
+              {last < data.lastYear ? ` ${t('Annual data end in {year}; 2026 readings appear in the country panel where published.', { year: last })}` : ''}
             </p>
           </div>
         </div>

@@ -7,6 +7,7 @@ import EChart, { axisCommon, baseOption, INK } from './EChart';
 import CountryPicker from './CountryPicker';
 import Flag from './Flag';
 import { lineOption, lineSeries, years } from './TrendExplorer';
+import { t } from '../lib/i18n';
 
 const TABLE = ['hpi_growth', 'rent_growth', 'pti', 'median_income_pps', 'aic_pps', 'inflation', 'housing_cost_share', 'overburden'];
 const MULTIPLES: [string, 'index' | 'original', string][] = [
@@ -62,7 +63,7 @@ export default function Comparison() {
 
   const growthOption = useMemo(() => {
     const series = ids.map((id, i) => ({
-      name: starts.get(id) !== base ? `${countryName(id)} (from ${starts.get(id)})` : countryName(id),
+      name: starts.get(id) !== base ? `${countryName(id)} (${t('from {year}', { year: starts.get(id)! })})` : countryName(id),
       type: 'bar',
       barMaxWidth: 22,
       barGap: '12%',
@@ -82,9 +83,9 @@ export default function Comparison() {
         axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(29,42,68,0.05)' } },
         formatter: (ps: any[]) =>
           `<b>${ps[0].axisValue}</b><br/>` +
-          ps.map((p) => `${p.marker}${p.seriesName.replace(/ \(from \d{4}\)$/, '')}: <b>${p.data ? fmtSigned(p.data.value, 0, '%') : 'no data'}</b>${p.data ? ` <span style="color:#6b7385">${p.data.from}–${p.data.to}</span>` : ''}`).join('<br/>'),
+          ps.map((p) => `${p.marker}${countryName(ids[p.seriesIndex])}: <b>${p.data ? fmtSigned(p.data.value, 0, '%') : t('no data')}</b>${p.data ? ` <span style="color:#6b7385">${p.data.from}–${p.data.to}</span>` : ''}`).join('<br/>'),
       },
-      xAxis: { type: 'category', data: GROWTH.map(([, l]) => l), ...axisCommon, splitLine: { show: false }, axisLabel: { ...axisCommon.axisLabel, color: INK, fontSize: 12 } },
+      xAxis: { type: 'category', data: GROWTH.map(([, l]) => t(l)), ...axisCommon, splitLine: { show: false }, axisLabel: { ...axisCommon.axisLabel, color: INK, fontSize: 12 } },
       yAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => `${v}%` } },
       series,
     };
@@ -93,37 +94,35 @@ export default function Comparison() {
   return (
     <section id="compare" className="section" aria-labelledby="compare-title">
       <div className="section-head">
-        <p className="eyebrow">Country comparison</p>
-        <h2 id="compare-title">Side by side</h2>
-        <p className="lede">Choose two to five countries — put a Balkan country next to Belgium, Germany, France or Austria and see how their paths differ.</p>
+        <p className="eyebrow">{t('Country comparison')}</p>
+        <h2 id="compare-title">{t('Side by side')}</h2>
+        <p className="lede">{t('Choose two to five countries — put a Balkan country next to Belgium, Germany, France or Austria and see how their paths differ.')}</p>
       </div>
       <div className="card picker-card">
         <CountryPicker min={1} />
-        {ids.length < 2 && <p className="notice">Add at least one more country to compare.</p>}
+        {ids.length < 2 && <p className="notice">{t('Add at least one more country to compare.')}</p>}
       </div>
 
       <div className="card chart-card">
         <div className="chart-head">
           <div>
-            <h3 className="chart-title">Did incomes keep up? Change {base} to {end}</h3>
-            <p className="chart-unit">% change in each index over the period · base year and period set in the filter bar</p>
+            <h3 className="chart-title">{t('Did incomes keep up? Change {from} to {to}', { from: base, to: end })}</h3>
+            <p className="chart-unit">{t('% change in each index over the period · base year and period set in the filter bar')}</p>
           </div>
         </div>
-        <EChart option={growthOption} height={320} ariaLabel={`Bar chart comparing growth in house prices, rents, consumer prices and income since ${base}`} />
+        <EChart option={growthOption} height={320} ariaLabel={t('Bar chart comparing growth in house prices, rents, consumer prices and income since {year}', { year: base })} />
         <p className="caption">
-          Each bar compares a country with its own past, so differences in currencies and price levels cancel out. Income growth uses median household income in
-          national currency (EU-SILC). If a series ends before {end}, the latest year is used and shown in the tooltip.
+          {t('Each bar compares a country with its own past, so differences in currencies and price levels cancel out. Income growth uses median household income in national currency (EU-SILC). If a series ends before {year}, the latest year is used and shown in the tooltip.', { year: end })}
           {shifted.length > 0 && (
             <>
               {' '}
               <strong>
-                {shifted.map((id) => `${countryName(id)} is measured from ${starts.get(id)}`).join('; ')}
+                {shifted.map((id) => t('{country} is measured from {year}', { country: countryName(id), year: starts.get(id)! })).join('; ')}
               </strong>{' '}
-              because its official series start after {base} (for Albania: rents and consumer prices from 2016, the EU income survey from 2017). Its bars cover a
-              shorter period than the others.
+              {t('because its official series start after {year} (for Albania: rents and consumer prices from 2016, the EU income survey from 2017). Its bars cover a shorter period than the others.', { year: base })}
             </>
           )}
-          {' '}A missing bar means that measure has no data for the country.
+          {' '}{t('A missing bar means that measure has no data for the country.')}
         </p>
       </div>
 
@@ -133,9 +132,8 @@ export default function Comparison() {
         {MULTIPLES.map(([k, mode, title]) => <Multiple key={k} indicator={ind(k)} mode={mode} title={title} />)}
       </div>
       <p className="callout">
-        <strong>Why we don't compare house prices in euros.</strong> Official house price indices measure how prices change within each country. They are not
-        prices per square metre, they cover different housing markets, and a euro buys very different amounts in Tirana and Brussels. Use the indexed views to
-        compare speed of change, and the purchasing-power measures to compare levels.
+        <strong>{t('Why these charts use indices, not euros.')}</strong>{' '}
+        {t('Official house price indices measure how prices change within each country; they are not prices per square metre and they cover different housing markets. Use them to compare speed of change. For actual prices in euros, see “Home prices (€ per m²)” on the map, in the table and in the calculator — those come from the Deloitte Property Index and are not official statistics.')}
       </p>
     </section>
   );
@@ -145,8 +143,8 @@ function MultipleNote({ indicator, mode }: { indicator: Indicator; mode: 'index'
   const { filters, countryName } = useApp();
   const notes = filters.countries.flatMap((id) => {
     const s = indicator.series[id];
-    if (!s?.length) return [`${countryName(id)}: no data`];
-    if (mode === 'index' && !obsAt(s, filters.baseYear)) return [`${countryName(id)}: starts ${s[0][0]}, so it can’t be indexed to ${filters.baseYear}`];
+    if (!s?.length) return [`${countryName(id)}: ${t('no data')}`];
+    if (mode === 'index' && !obsAt(s, filters.baseYear)) return [`${countryName(id)}: ${t('starts {year}, so it can’t be indexed to {base}', { year: s[0][0], base: filters.baseYear })}`];
     return [];
   });
   return notes.length ? <p className="multiple-note">{notes.join(' · ')}</p> : null;
@@ -157,15 +155,15 @@ function Multiple({ indicator, mode, title }: { indicator: Indicator; mode: 'ind
   const xs = years(filters.startYear, Math.min(filters.endYear, indicator.coverage.last));
   const { series } = lineSeries(indicator, filters.countries, mode, filters.baseYear, xs, filters.benchmark, countryName);
   series.forEach((s: any) => (s.endLabel = undefined));
-  const unit = mode === 'index' ? `Index, ${filters.baseYear} = 100` : indicator.unit;
+  const unit = mode === 'index' ? t('Index, {year} = 100', { year: filters.baseYear }) : indicator.unit;
   const opt = lineOption(indicator, series, xs, unit, indicator.decimals);
   opt.legend = { show: false };
   opt.grid = { left: 4, right: 12, top: 12, bottom: 4, containLabel: true };
   return (
     <div className="card multiple">
-      <h3 className="chart-title sm">{title}</h3>
+      <h3 className="chart-title sm">{t(title)}</h3>
       <p className="chart-unit">{unit}</p>
-      <EChart option={opt} height={190} ariaLabel={`${title} for selected countries`} />
+      <EChart option={opt} height={190} ariaLabel={t('{name} for selected countries', { name: t(title) })} />
       <MultipleNote indicator={indicator} mode={mode} />
     </div>
   );
@@ -178,21 +176,21 @@ function ComparisonTable() {
     <div className="card table-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">Key figures, {filters.year}</h3>
-          <p className="chart-unit">Where a country has no value for {filters.year}, the latest earlier year is shown in small type</p>
+          <h3 className="chart-title">{t('Key figures, {year}', { year: filters.year })}</h3>
+          <p className="chart-unit">{t('Where a country has no value for {year}, the latest earlier year is shown in small type', { year: filters.year })}</p>
         </div>
       </div>
       <div className="table-scroll">
         <table className="cmp">
           <thead>
             <tr>
-              <th scope="col">Measure</th>
+              <th scope="col">{t('Measure')}</th>
               {ids.map((id, i) => (
                 <th key={id} scope="col">
                   <span className="swatch" style={{ background: SERIES[i] }} /> <Flag id={id} /> {countryName(id)}
                 </th>
               ))}
-              {filters.benchmark && <th scope="col"><span className="swatch" style={{ background: BENCHMARK_COLOR }} /> <Flag id="EU27" /> Benchmark</th>}
+              {filters.benchmark && <th scope="col"><span className="swatch" style={{ background: BENCHMARK_COLOR }} /> <Flag id="EU27" /> {t('Benchmark')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -206,7 +204,7 @@ function ComparisonTable() {
                   <>
                     {indicator.kind === 'rate' ? fmtSigned(o[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, o[1])}
                     {o[0] !== filters.year && <span className="yr">{o[0]}</span>}
-                    {f.length > 0 && <span className="flagmark" title={f.join(', ')}>{f[0][0]}</span>}
+                    {f.length > 0 && <span className="flagmark" title={f.join(', ')}>{o[2]![0]}</span>}
                   </>
                 );
               };
@@ -224,7 +222,7 @@ function ComparisonTable() {
           </tbody>
         </table>
       </div>
-      <p className="caption">Small letters mark status flags from the source: p = provisional, e = estimated, b = break in series, u = low reliability, d = definition differs.</p>
+      <p className="caption">{t('Small letters mark status flags from the source: p = provisional, e = estimated, b = break in series, u = low reliability, d = definition differs.')}</p>
     </div>
   );
 }

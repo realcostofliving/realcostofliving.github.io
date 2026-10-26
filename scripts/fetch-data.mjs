@@ -133,6 +133,15 @@ async function loadEurostatLatest(src) {
   return { latest, benchmark: bench && bench.length ? pick(bench) : null, sourceKey: src.ds };
 }
 
+// Half-yearly series (minimum wages): the value on 1 January (S1) is the annual figure.
+async function loadEurostatSemi(src) {
+  const raw = await eurostat(src.ds, src.filters, `${FIRST_YEAR}-S1`);
+  const series = new Map();
+  const pick = (arr) => arr.filter((o) => o.t.endsWith('-S1') && +o.t.slice(0, 4) >= FIRST_YEAR).map((o) => [+o.t.slice(0, 4), round(o.v), o.f || undefined]);
+  for (const [g, arr] of raw) { const id = byEurostat.get(g); if (id) series.set(id, pick(arr)); }
+  return { series, benchmark: null, sourceKey: src.ds };
+}
+
 let bisRaw = null;
 async function bisQuarterly() {
   if (bisRaw) return bisRaw;
@@ -334,6 +343,7 @@ function loader(src) {
     case 'oecd': return loadOecd(src);
     case 'worldbank': return loadWorldBank(src);
     case 'eurostat-latest': return loadEurostatLatest(src);
+    case 'eurostat-semi': return loadEurostatSemi(src);
     case 'bis-latest': return loadBisLatest(src);
     case 'boa-index': return loadBoa('index');
     case 'boa-growth': return loadBoa('growth');
@@ -379,13 +389,19 @@ async function buildIndicator(ind, now) {
     let benchmark = null, benchmarkId = ind.benchmark, benchmarkSource = null;
     const usedSources = new Set();
     let extra;
+    let dropped;
     for (const src of ind.sources) {
       const res = await loader(src);
       if (!benchmark && res.benchmark) { benchmark = res.benchmark; benchmarkId = res.benchmarkId; benchmarkSource = res.sourceKey; usedSources.add(res.sourceKey); }
       for (const [id, s] of res.series) {
         if (series[id] || !allowed(src, id) || !s.length) continue;
         if (src.minLastYear && s[s.length - 1][0] < src.minLastYear) continue;
-        series[id] = s.map((o) => (o[2] ? o : o.slice(0, 2)));
+        // A share of 0% is impossible for some measures; the source occasionally publishes 0 where
+        // a value is missing (e.g. Türkiye 2022). Those are dropped and listed, never kept as zero.
+        const kept = ind.dropZeros ? s.filter((o) => o[1] !== 0) : s;
+        if (kept.length < s.length) (dropped ??= []).push(...s.filter((o) => o[1] === 0).map((o) => ({ id, year: o[0] })));
+        if (!kept.length) continue;
+        series[id] = kept.map((o) => (o[2] ? o : o.slice(0, 2)));
         const key = res.sourceOf?.get(id) ?? res.sourceKey;
         countrySource[id] = res.derived ? { s: key, d: 1 } : { s: key };
         usedSources.add(key);
@@ -403,7 +419,9 @@ async function buildIndicator(ind, now) {
           if (latest[id] || !allowed(src, id) || !o) continue;
           // Only keep observations newer than the last complete annual value.
           const lastAnnual = series[id]?.[series[id].length - 1]?.[0] ?? 0;
-          if (+o.p.slice(0, 4) <= lastAnnual) continue;
+          // Annual values from half-yearly data use January, so a July reading of that year is still newer.
+          const julyAfterJanuary = o.p.endsWith('-S2') && +o.p.slice(0, 4) === lastAnnual;
+          if (+o.p.slice(0, 4) <= lastAnnual && !julyAfterJanuary) continue;
           latest[id] = { ...o, s: res.sourceKey };
         }
       }
@@ -424,6 +442,7 @@ async function buildIndicator(ind, now) {
       latest,
       latestBenchmark,
       ...(extra ? { extra } : {}),
+      ...(dropped ? { dropped } : {}),
     };
     console.log(`${Object.keys(series).length} countries, ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'no data'}${latest ? `, latest for ${Object.keys(latest).length}` : ''}`);
     return built;

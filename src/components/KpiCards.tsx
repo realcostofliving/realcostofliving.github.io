@@ -5,6 +5,7 @@ import { deltaTone } from '../lib/scales';
 import type { Indicator, Obs } from '../lib/types';
 import Flag from './Flag';
 import Sparkline from './Sparkline';
+import { t } from '../lib/i18n';
 
 const KPIS = ['hpi_growth', 'rent_growth', 'housing_cost_share', 'pti'];
 
@@ -21,24 +22,24 @@ export default function KpiCards() {
   const subject: Subject = filters.focus
     ? { kind: 'country', id: filters.focus, label: countryName(filters.focus) }
     : filters.region === 'EU'
-      ? { kind: 'aggregate', id: 'EU27', label: 'EU-27 (official aggregate)' }
-      : { kind: 'median', id: 'median', label: `The typical country in ${regionLabel === 'All European countries' ? 'Europe' : regionLabel}` };
+      ? { kind: 'aggregate', id: 'EU27', label: t('EU-27 (official aggregate)') }
+      : { kind: 'median', id: 'median', label: filters.region === 'ALL' ? t('The typical country in Europe') : t('The typical country in {region}', { region: regionLabel }) };
 
   return (
     <section id="overview" className="section kpi-section" aria-labelledby="overview-title">
       <div className="kpi-head">
         <div>
-          <p className="eyebrow">Overview · {filters.year}</p>
+          <p className="eyebrow">{t('Overview')} · {filters.year}</p>
           <h2 id="overview-title" className="kpi-subject">
             {subject.kind === 'country' && <Flag id={subject.id} size="md" />} {subject.label}
           </h2>
         </div>
         <p className="kpi-note">
           {subject.kind === 'median'
-            ? 'No country chosen yet, so these are middle values across all countries with data — not an official EU figure. Click a country on the map or search for one to see its own numbers.'
+            ? t('No country chosen yet, so these are middle values across all countries with data — not an official EU figure. Click a country on the map or search for one to see its own numbers.')
             : subject.kind === 'aggregate'
-              ? 'Official EU-27 aggregate as published by the source. The price-to-income ratio has no EU aggregate, so the euro area is shown.'
-              : 'Click another country on the map, or clear the selection to return to the regional view.'}
+              ? t('Official EU-27 aggregate as published by the source. The price-to-income ratio has no EU aggregate, so the euro area is shown.')
+              : t('Click another country on the map, or clear the selection to return to the regional view.')}
         </p>
       </div>
       <div className="kpis">
@@ -72,7 +73,7 @@ function Kpi({ indicator, subject }: { indicator: Indicator; subject: Subject })
   const tone = deltaTone(indicator, delta);
   const lastAvail = !cur ? series.filter((o) => o[0] <= year).pop() ?? series[series.length - 1] : undefined;
   const bench = filters.benchmark && indicator.benchmarkSeries && subject.kind !== 'aggregate' ? obsAt(indicator.benchmarkSeries, year) : undefined;
-  const benchName = indicator.benchmarkId === 'EA' ? 'Euro area' : 'EU-27';
+  const benchName = indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27');
   const latest = subject.kind === 'country' ? indicator.latest?.[subject.id] : subject.kind === 'aggregate' ? indicator.latestBenchmark : undefined;
   const flags = subject.kind !== 'median' && cur ? describeFlag(cur[2]) : [];
   const deltaUnit = indicator.kind === 'rate' || indicator.unitShort === '%' ? ' pp' : ' pts';
@@ -83,7 +84,7 @@ function Kpi({ indicator, subject }: { indicator: Indicator; subject: Subject })
     <article className="kpi">
       <header>
         <h3 className="kpi-title">
-          <button className="linklike" onClick={() => set({ indicator: indicator.id })} title="Show this indicator on the map and charts">
+          <button className="linklike" onClick={() => set({ indicator: indicator.id })} title={t('Show this indicator on the map and charts')}>
             {indicator.label}
           </button>
         </h3>
@@ -92,20 +93,20 @@ function Kpi({ indicator, subject }: { indicator: Indicator; subject: Subject })
       {cur ? (
         <div className="kpi-value-row">
           <p className="kpi-value">{indicator.kind === 'rate' ? fmtSigned(cur[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, cur[1])}</p>
-          <Sparkline series={series} from={Math.max(indicator.coverage.first, year - 12)} to={year} highlight={year} zeroLine={indicator.kind === 'rate'} label={`${indicator.label} trend`} />
+          <Sparkline series={series} from={Math.max(indicator.coverage.first, year - 12)} to={year} highlight={year} zeroLine={indicator.kind === 'rate'} label={t('{name} trend', { name: indicator.label })} />
         </div>
       ) : (
         <div className="kpi-value-row">
-          <p className="kpi-value kpi-na">Data unavailable</p>
-          {lastAvail && <p className="kpi-hint">Most recent: {fmtValue(indicator, lastAvail[1])} in {lastAvail[0]}</p>}
+          <p className="kpi-value kpi-na">{t('Data unavailable')}</p>
+          {lastAvail && <p className="kpi-hint">{t('Most recent: {v} in {year}', { v: fmtValue(indicator, lastAvail[1]), year: lastAvail[0] })}</p>}
         </div>
       )}
       <dl className="kpi-meta">
         {cur && (
           <div>
-            <dt>vs {year - 1}</dt>
+            <dt>{t('vs {year}', { year: year - 1 })}</dt>
             <dd className={`delta ${tone}`}>
-              {delta === undefined ? 'no data for previous year' : <>{tone.startsWith('up') ? '▲' : tone.startsWith('down') ? '▼' : '■'} {fmtSigned(delta, indicator.decimals, deltaUnit)}</>}
+              {delta === undefined ? t('no data for previous year') : <>{tone.startsWith('up') ? '▲' : tone.startsWith('down') ? '▼' : '■'} {fmtSigned(delta, indicator.decimals, deltaUnit)}</>}
             </dd>
           </div>
         )}
@@ -117,17 +118,17 @@ function Kpi({ indicator, subject }: { indicator: Indicator; subject: Subject })
         )}
         {latest && (
           <div className="kpi-latest">
-            <dt>Latest</dt>
+            <dt>{t('Latest')}</dt>
             <dd>
-              {fmtSigned(latest.v, 1, '%')} <span className="muted">({periodLabel(latest.p)}, year on year{latest.f?.includes('p') ? ', provisional' : ''})</span>
+              {fmtSigned(latest.v, 1, '%')} <span className="muted">({periodLabel(latest.p)}, {t('year on year')}{latest.f?.includes('p') ? `, ${t('provisional')}` : ''})</span>
             </dd>
           </div>
         )}
       </dl>
       <footer className="kpi-foot">
-        {subject.kind === 'median' && cur ? `Median of ${cur[2]} countries · ` : ''}
+        {subject.kind === 'median' && cur ? `${t('Median of {n} countries', { n: cur[2]! })} · ` : ''}
         {flags.length ? `${flags.join(', ')} · ` : ''}
-        Source: {srcText}
+        {t('Source')}: {srcText}
       </footer>
     </article>
   );

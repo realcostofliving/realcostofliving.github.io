@@ -30,10 +30,11 @@ export function matchScore(c: Country, query: string): number {
   const q = fold(query);
   if (!q) return 1;
   const name = fold(c.name);
-  if (name === q || c.id.toLowerCase() === q || (ALIASES[c.id] ?? []).includes(q)) return 4;
-  if (name.startsWith(q)) return 3;
+  const en = fold(c.nameEn ?? c.name);
+  if (name === q || en === q || c.id.toLowerCase() === q || (ALIASES[c.id] ?? []).includes(q)) return 4;
+  if (name.startsWith(q) || en.startsWith(q)) return 3;
   if ((ALIASES[c.id] ?? []).some((a) => a.startsWith(q))) return 2.5;
-  if (name.includes(q)) return 2;
+  if (name.includes(q) || en.includes(q)) return 2;
   if ((ALIASES[c.id] ?? []).some((a) => a.includes(q))) return 1.5;
   return 0;
 }

@@ -4,6 +4,7 @@ import { describeFlag, fmt, fmtSigned, obsAt, periodLabel } from '../lib/data';
 import { BENCHMARK_COLOR, SERIES } from '../lib/scales';
 import EChart, { axisCommon, baseOption, INK } from './EChart';
 import Flag from './Flag';
+import { t } from '../lib/i18n';
 import { years } from './TrendExplorer';
 
 const PLI: [string, string][] = [
@@ -27,18 +28,18 @@ export default function CostOfLiving() {
   return (
     <section id="cost-of-living" className="section" aria-labelledby="col-title">
       <div className="section-head">
-        <p className="eyebrow">Cost of living</p>
-        <h2 id="col-title">What everyday life costs</h2>
-        <p className="lede">Two different questions, two different tools.</p>
+        <p className="eyebrow">{t('Cost of living')}</p>
+        <h2 id="col-title">{t('What everyday life costs')}</h2>
+        <p className="lede">{t('Two different questions, two different tools.')}</p>
       </div>
       <div className="two-up">
         <div className="callout">
-          <strong>How expensive is a country right now?</strong> Use <em>price level indices</em>, built from purchasing power parities. They compare the cost of
-          the same basket across countries in one year, with the EU average set to 100.
+          <strong>{t('How expensive is a country right now?')}</strong>{' '}
+          {t('Use price level indices, built from purchasing power parities. They compare the cost of the same basket across countries in one year, with the EU average set to 100.')}
         </div>
         <div className="callout">
-          <strong>How fast are prices rising?</strong> Use <em>inflation</em> from consumer price indices. They compare a country with its own past and say nothing
-          about whether it is cheap or expensive.
+          <strong>{t('How fast are prices rising?')}</strong>{' '}
+          {t('Use inflation from consumer price indices. They compare a country with its own past and say nothing about whether it is cheap or expensive.')}
         </div>
       </div>
       <PriceLevels />
@@ -52,7 +53,7 @@ function PriceLevels() {
   const ids = filters.countries;
   const year = Math.min(filters.year, ind('pli').coverage.last);
   const option = useMemo(() => {
-    const cats = PLI.map(([, l]) => l);
+    const cats = PLI.map(([, l]) => t(l));
     const series: any[] = ids.map((id, i) => ({
       name: countryName(id),
       type: 'scatter',
@@ -90,14 +91,14 @@ function PriceLevels() {
         formatter: (p: any) => {
           if (!p.data) return '';
           const f = describeFlag(p.data.flag);
-          return `<b>${p.seriesName}</b> · ${cats[p.data.value[1]]}<br/>Price level: <b>${fmt(p.data.value[0], 0)}</b> (EU-27 = 100), ${p.data.y}${f.length ? `<br/><span style="color:#6b7385">${f.join(', ')}</span>` : ''}`;
+          return `<b>${p.seriesName}</b> · ${cats[p.data.value[1]]}<br/>${t('Price level')}: <b>${fmt(p.data.value[0], 0)}</b> (${t('EU-27 = 100')}), ${p.data.y}${f.length ? `<br/><span style="color:#6b7385">${f.join(', ')}</span>` : ''}`;
         },
       },
       xAxis: { type: 'value', scale: true, ...axisCommon },
       yAxis: { type: 'category', data: cats, inverse: true, ...axisCommon, splitLine: { show: true, lineStyle: { color: '#efe9de' } }, axisLabel: { ...axisCommon.axisLabel, color: INK, fontSize: 12 } },
       series: [
         ...series,
-        { type: 'line', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: BENCHMARK_COLOR, width: 1.5, type: 'solid' }, label: { formatter: 'EU average', color: INK, fontSize: 10, position: 'insideEndTop' }, data: [{ xAxis: 100 }] } },
+        { type: 'line', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: BENCHMARK_COLOR, width: 1.5, type: 'solid' }, label: { formatter: t('EU average'), color: INK, fontSize: 10, position: 'insideEndTop' }, data: [{ xAxis: 100 }] } },
       ],
     };
   }, [ids, year, ind, countryName]);
@@ -105,14 +106,13 @@ function PriceLevels() {
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">How expensive is it? Price levels by category, {year}</h3>
-          <p className="chart-unit">Price level index, EU-27 = 100 · Eurostat–OECD purchasing power parities</p>
+          <h3 className="chart-title">{t('How expensive is it? Price levels by category, {year}', { year })}</h3>
+          <p className="chart-unit">{t('Price level index, EU-27 = 100 · Eurostat–OECD purchasing power parities')}</p>
         </div>
       </div>
-      <EChart option={option} height={360} ariaLabel={`Price levels by category for ${ids.map(countryName).join(', ')}`} />
+      <EChart option={option} height={360} ariaLabel={t('Price levels by category for {countries}', { countries: ids.map(countryName).join(', ') })} />
       <p className="caption">
-        A value of 50 means that category costs about half the EU average. Purchasing power parities are published with a lag, so the latest year is {ind('pli').coverage.last}.
-        Kosovo lacks some categories and Ukraine, Moldova and Belarus are not covered.
+        {t('A value of 50 means that category costs about half the EU average. Purchasing power parities are published with a lag, so the latest year is {year}. Kosovo lacks some categories and Ukraine, Moldova and Belarus are not covered.', { year: ind('pli').coverage.last })}
       </p>
     </div>
   );
@@ -123,7 +123,7 @@ function CategoryInflation() {
   const id = filters.focus ?? filters.countries[0];
   const xs = years(Math.max(filters.startYear, 2005), Math.min(filters.endYear, 2025));
   const series = CPI.map(([k, label], i) => ({
-    name: label,
+    name: t(label),
     type: 'line',
     showSymbol: false,
     connectNulls: false,
@@ -147,8 +147,8 @@ function CategoryInflation() {
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title"><Flag id={id} /> {countryName(id)}: what is driving inflation?</h3>
-          <p className="chart-unit">Annual average % change, harmonised index of consumer prices (HICP)</p>
+          <h3 className="chart-title"><Flag id={id} /> {t('{country}: what is driving inflation?', { country: countryName(id) })}</h3>
+          <p className="chart-unit">{t('Annual average % change, harmonised index of consumer prices (HICP)')}</p>
         </div>
         <div className="pills">
           {filters.countries.map((c) => (
@@ -157,23 +157,22 @@ function CategoryInflation() {
         </div>
       </div>
       {available.length > 1 ? (
-        <EChart option={option} height={340} ariaLabel={`Inflation by category for ${countryName(id)}`} />
+        <EChart option={option} height={340} ariaLabel={t('Inflation by category for {country}', { country: countryName(id) })} />
       ) : (
         <p className="empty">
-          {countryName(id)} does not publish a harmonised consumer price index with category detail to Eurostat. Only overall inflation (national CPI via the World Bank) is
-          available — see the trend explorer.
+          {t('{country} does not publish a harmonised consumer price index with category detail to Eurostat. Only overall inflation (national CPI via the World Bank) is available — see the trend explorer.', { country: countryName(id) })}
         </p>
       )}
       {latest.length > 0 && (
         <div className="latest-strip">
-          <span className="eyebrow">2026 so far</span>
+          <span className="eyebrow">{t('2026 so far')}</span>
           {latest.map(({ label, o, b }) => (
             <span key={label} className="latest-item">
-              {label} <b>{fmtSigned(o!.v, 1, '%')}</b>
-              {b && filters.benchmark && <span className="muted"> (EU {fmtSigned(b.v, 1, '%')})</span>}
+              {t(label)} <b>{fmtSigned(o!.v, 1, '%')}</b>
+              {b && filters.benchmark && <span className="muted"> ({t('EU')} {fmtSigned(b.v, 1, '%')})</span>}
             </span>
           ))}
-          <span className="muted small">Year-on-year, {periodLabel(latest[0].o!.p)}</span>
+          <span className="muted small">{t('Year-on-year, {period}', { period: periodLabel(latest[0].o!.p) })}</span>
         </div>
       )}
     </div>

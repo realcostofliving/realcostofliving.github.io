@@ -69,8 +69,9 @@ for (const ind of data.indicators) {
 
   if (ind.latest) for (const [cid, o] of Object.entries(ind.latest)) {
     if (!countryIds.has(cid)) fail(`${tag} latest: unknown country ${cid}`);
-    if (!/^\d{4}-(Q[1-4]|\d{2})$/.test(o.p)) fail(`${tag} latest: bad period ${o.p}`);
-    if (!Number.isFinite(o.v) || o.v < RATE_RANGE[0] || o.v > RATE_RANGE[1]) fail(`${tag} latest: implausible ${cid} ${o.v}`);
+    if (!/^\d{4}-(Q[1-4]|S[12]|\d{2})$/.test(o.p)) fail(`${tag} latest: bad period ${o.p}`);
+    const range = ind.latestIsLevel ? [0, 1e6] : RATE_RANGE;
+    if (!Number.isFinite(o.v) || o.v < range[0] || o.v > range[1]) fail(`${tag} latest: implausible ${cid} ${o.v}`);
   }
 }
 

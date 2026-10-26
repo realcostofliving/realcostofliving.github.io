@@ -11,6 +11,8 @@ export interface Country {
   euro: boolean;
   iso3: string;
   ne: string;
+  /** English name, kept for search when the interface is in another language. */
+  nameEn?: string;
 }
 
 export interface Region {
@@ -64,6 +66,11 @@ export interface Indicator {
   latestBenchmark: LatestObs | null;
   /** Single-year snapshot: maps and rankings show each country's latest value up to the chosen year. */
   snapshot?: boolean;
+  /** The latest reading is a level (e.g. July minimum wage), not a year-on-year rate. */
+  latestIsLevel?: boolean;
+  dropZeros?: boolean;
+  /** Observations the source published as 0 where 0 is impossible; treated as missing. */
+  dropped?: { id: string; year: number }[];
   /** Per-country notes, e.g. the price basis for prices per m². */
   extra?: Record<string, { basis?: string; change?: number; note?: string }>;
   retrievedAt?: string;

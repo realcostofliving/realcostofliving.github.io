@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useApp } from '../lib/state';
-import { defaultYear, describeFlag, fmt, fmtEuroRound, fmtSigned, fmtValue, homeCost, inRegion, obsAt, PRICE_BASIS, transform, TYPICAL_HOME_M2 } from '../lib/data';
+import { defaultYear, describeFlag, fmt, fmtEuroRound, fmtValue, homeCost, inRegion, obsAt, PRICE_BASIS, transform, TYPICAL_HOME_M2 } from '../lib/data';
 import { SERIES } from '../lib/scales';
 import type { Indicator } from '../lib/types';
 import EChart, { axisCommon, baseOption, INK, INK_3 } from './EChart';
 import Flag from './Flag';
 import { years } from './TrendExplorer';
+import { numLocale, t } from '../lib/i18n';
 
-const RANK = ['overburden', 'housing_cost_share', 'pti', 'hpi_growth', 'rent_growth', 'pli_housing', 'median_income_pps'];
+const RANK = ['overburden', 'housing_cost_share', 'living_with_parents', 'pti', 'hpi_growth', 'rent_growth', 'pli_housing', 'median_income_pps'];
 
 const METRICS: { id: string; title: string; body: string }[] = [
   { id: 'pti', title: 'House price-to-income ratio', body: 'Are homes rising faster than what people earn? Above 100 means homes are less affordable relative to income than in 2015.' },
@@ -22,17 +23,17 @@ export default function Affordability() {
   return (
     <section id="affordability" className="section" aria-labelledby="aff-title">
       <div className="section-head">
-        <p className="eyebrow">Housing affordability</p>
-        <h2 id="aff-title">Can people afford a home?</h2>
-        <p className="lede">No single number answers this. Read these measures together: price growth tells you about momentum, income ratios about affordability, and the overburden rate about real hardship.</p>
+        <p className="eyebrow">{t('Housing affordability')}</p>
+        <h2 id="aff-title">{t('Can people afford a home?')}</h2>
+        <p className="lede">{t('No single number answers this. Read these measures together: price growth tells you about momentum, income ratios about affordability, and the overburden rate about real hardship.')}</p>
       </div>
       <div className="explainers">
-        {METRICS.map((m) => <Explainer key={m.id} {...m} />)}
+        {METRICS.map((m) => <Explainer key={m.id} id={m.id} title={t(m.title)} body={t(m.body)} />)}
       </div>
       <HomePrices />
       <p className="callout callout-accent">
-        <strong>An index is not a price.</strong> If Hungary's house price index is far higher than Italy's, that does not mean homes cost more in Hungary. It means
-        prices in Hungary have risen further since 2015. Official, comparable prices per square metre do not exist for most of Europe.
+        <strong>{t('An index is not a price.')}</strong>{' '}
+        {t('If Hungary’s house price index is far higher than Italy’s, that does not mean homes cost more in Hungary. It means prices in Hungary have risen further since 2015. Official, comparable prices per square metre do not exist for most of Europe, which is why the prices above come from Deloitte.')}
       </p>
       <KeptUp />
       <div className="aff-grid">
@@ -56,9 +57,10 @@ function HomePrices() {
   const byYears = rows.filter((r) => r.h.years !== undefined).sort((a, b) => b.h.years! - a.h.years!);
   const color = (id: string) => selected.get(id) ?? (data.countries.find((c) => c.id === id)?.wb ? '#e0a48c' : '#a9bcd2');
   const name = (r: { id: string; h: { year: number } }) => `${countryName(r.id)}${r.h.year !== year ? ` (${r.h.year})` : ''}`;
+  const euro = (v: number) => `€${Math.round(v).toLocaleString(numLocale())}`;
   const tip = (r: (typeof rows)[number]) =>
-    `<b>${countryName(r.id)}</b>, ${r.h.year}<br/>${TYPICAL_HOME_M2} m² home: <b>about ${fmtEuroRound(r.h.price)}</b><br/>€${Math.round(r.h.perM2).toLocaleString('en-GB')} per m² · ${PRICE_BASIS[r.h.basis ?? ''] ?? ''}` +
-    (r.h.years !== undefined ? `<br/>≈ ${fmt(r.h.years, 1)} years of median disposable income (${r.h.incomeYear})` : '');
+    `<b>${countryName(r.id)}</b>, ${r.h.year}<br/>${t('A {size} m² home:', { size: TYPICAL_HOME_M2 })} <b>${t('about {v}', { v: fmtEuroRound(r.h.price) })}</b><br/>${t('{v} per m²', { v: euro(r.h.perM2) })} · ${t(PRICE_BASIS[r.h.basis ?? ''] ?? '')}` +
+    (r.h.years !== undefined ? `<br/>${t('≈ {n} years of median disposable income ({year})', { n: fmt(r.h.years, 1), year: r.h.incomeYear! })}` : '');
   const bar = (list: typeof rows, value: (r: (typeof rows)[number]) => number, label: (v: number) => string): any => ({
     ...baseOption(),
     grid: { left: 4, right: 70, top: 4, bottom: 4, containLabel: true },
@@ -78,27 +80,25 @@ function HomePrices() {
       <div className="card chart-card">
         <div className="chart-head">
           <div>
-            <h3 className="chart-title">What a {TYPICAL_HOME_M2} m² home costs, {year}</h3>
-            <p className="chart-unit">€, average price per m² × {TYPICAL_HOME_M2} · Deloitte Property Index; Montenegro: Monstat</p>
+            <h3 className="chart-title">{t('What a {size} m² home costs, {year}', { size: TYPICAL_HOME_M2, year })}</h3>
+            <p className="chart-unit">{t('€, average price per m² × {size} · Deloitte Property Index; Montenegro: Monstat', { size: TYPICAL_HOME_M2 })}</p>
           </div>
         </div>
-        <EChart option={bar(byPrice, (r) => Math.round(r.h.price), (v) => fmtEuroRound(v))} height={h} ariaLabel={`Price of a ${TYPICAL_HOME_M2} square metre home by country`} onClick={(p) => byPrice[p.dataIndex] && selectCountry(byPrice[p.dataIndex].id)} />
+        <EChart option={bar(byPrice, (r) => Math.round(r.h.price), (v) => fmtEuroRound(v))} height={h} ariaLabel={t('Price of a {size} square metre home by country', { size: TYPICAL_HOME_M2 })} onClick={(p) => byPrice[p.dataIndex] && selectCountry(byPrice[p.dataIndex].id)} />
       </div>
       <div className="card chart-card">
         <div className="chart-head">
           <div>
-            <h3 className="chart-title">How many years of income is that?</h3>
-            <p className="chart-unit">Price of a {TYPICAL_HOME_M2} m² home ÷ median disposable income per person (EU-SILC)</p>
+            <h3 className="chart-title">{t('How many years of income is that?')}</h3>
+            <p className="chart-unit">{t('Price of a {size} m² home ÷ median disposable income per person (EU-SILC)', { size: TYPICAL_HOME_M2 })}</p>
           </div>
         </div>
-        <EChart option={bar(byYears, (r) => +r.h.years!.toFixed(1), (v) => `${fmt(v, 1)} yrs`)} height={h} ariaLabel="Years of median income needed for a home, by country" onClick={(p) => byYears[p.dataIndex] && selectCountry(byYears[p.dataIndex].id)} />
+        <EChart option={bar(byYears, (r) => +r.h.years!.toFixed(1), (v) => t('{n} yrs', { n: fmt(v, 1) }))} height={h} ariaLabel={t('Years of median income needed for a home, by country')} onClick={(p) => byYears[p.dataIndex] && selectCountry(byYears[p.dataIndex].id)} />
       </div>
       <p className="caption home-caption">
-        <strong>Real prices, read with care.</strong> These are average prices per square metre — mostly asking prices for new homes — collected by Deloitte’s
-        national offices from national sources, not official harmonised statistics; Montenegro uses its statistics office. Capitals and coasts cost far more than the national average
-        (Tirana is about €2,100/m² against €1,720 for Albania). “Years of income” divides the price by the median person’s yearly disposable income after tax and
-        benefits (a couple earns roughly 1.5 times that), so it shows how hard buying is, ignoring savings, mortgages and interest. Countries in brackets only have a 2024 price.
-        {rows.length < data.countries.filter((c) => inRegion(c, filters.region)).length ? ` Covers ${rows.length} of ${data.countries.filter((c) => inRegion(c, filters.region)).length} countries in this region.` : ''}
+        <strong>{t('Real prices, read with care.')}</strong>{' '}
+        {t('These are average prices per square metre — mostly asking prices for new homes — collected by Deloitte’s national offices from national sources, not official harmonised statistics; Montenegro uses its statistics office. Capitals and coasts cost far more than the national average (Tirana is about €2,100/m² against €1,720 for Albania). “Years of income” divides the price by the median person’s yearly disposable income after tax and benefits (a couple earns roughly 1.5 times that), so it shows how hard buying is, ignoring savings, mortgages and interest. Countries in brackets only have a 2024 price.')}
+        {rows.length < data.countries.filter((c) => inRegion(c, filters.region)).length ? ` ${t('Covers {n} of {total} countries in this region.', { n: rows.length, total: data.countries.filter((c) => inRegion(c, filters.region)).length })}` : ''}
       </p>
     </div>
   );
@@ -112,8 +112,8 @@ function Explainer({ id, title, body }: { id: string; title: string; body: strin
       <h3>{title}</h3>
       <p>{body}</p>
       <p className="explainer-foot">
-        {i.coverage.countries} countries · {i.coverage.first}–{i.coverage.last}
-        <button className="linklike" onClick={() => { set({ indicator: id }); document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' }); }}>Show on map →</button>
+        {t('{n} countries', { n: i.coverage.countries })} · {i.coverage.first}–{i.coverage.last}
+        <button className="linklike" onClick={() => { set({ indicator: id }); document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' }); }}>{t('Show on map →')}</button>
       </p>
     </article>
   );
@@ -155,7 +155,7 @@ function Ranking() {
         barMaxWidth: 12,
         data: rows.map((r) => ({ value: r.o![1], itemStyle: { color: selected.get(r.id) ?? '#a9bcd2', borderRadius: [0, 3, 3, 0] } })),
         label: { show: true, position: 'right', color: INK_3, fontSize: 10, formatter: (p: any) => fmt(p.value, indicator.decimals) },
-        markLine: bench ? { symbol: 'none', silent: true, lineStyle: { color: '#2b2f3a', width: 1.5, type: 'solid' }, label: { formatter: indicator.benchmarkId === 'EA' ? 'Euro area' : 'EU-27', color: INK, fontSize: 10, position: 'end' }, data: [{ xAxis: bench[1] }] } : undefined,
+        markLine: bench ? { symbol: 'none', silent: true, lineStyle: { color: '#2b2f3a', width: 1.5, type: 'solid' }, label: { formatter: indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27'), color: INK, fontSize: 10, position: 'end' }, data: [{ xAxis: bench[1] }] } : undefined,
       },
     ],
   };
@@ -164,24 +164,25 @@ function Ranking() {
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">Affordability ranking, {year}</h3>
+          <h3 className="chart-title">{t('Affordability ranking, {year}', { year })}</h3>
           <p className="chart-unit">{indicator.label} · {indicator.unit}</p>
         </div>
-        <div className="seg seg-sm" role="radiogroup" aria-label="Order">
-          <button role="radio" aria-checked={order === 'affordable'} className={order === 'affordable' ? 'on' : ''} onClick={() => setOrder('affordable')}>Most affordable first</button>
-          <button role="radio" aria-checked={order === 'expensive'} className={order === 'expensive' ? 'on' : ''} onClick={() => setOrder('expensive')}>Least affordable first</button>
+        <div className="seg seg-sm" role="radiogroup" aria-label={t('Order')}>
+          <button role="radio" aria-checked={order === 'affordable'} className={order === 'affordable' ? 'on' : ''} onClick={() => setOrder('affordable')}>{t('Most affordable first')}</button>
+          <button role="radio" aria-checked={order === 'expensive'} className={order === 'expensive' ? 'on' : ''} onClick={() => setOrder('expensive')}>{t('Least affordable first')}</button>
         </div>
       </div>
-      <div className="pills" role="toolbar" aria-label="Ranking measure">
+      <div className="pills" role="toolbar" aria-label={t('Ranking measure')}>
         {RANK.map((k) => (
           <button key={k} className={`pill sm ${metric === k ? 'on' : ''}`} aria-pressed={metric === k} onClick={() => setMetric(k)}>{ind(k).short}</button>
         ))}
       </div>
-      <EChart option={option} height={Math.max(240, rows.length * 18 + 30)} ariaLabel={`Ranking of countries by ${indicator.label}`} onClick={(p) => rows[p.dataIndex] && selectCountry(rows[p.dataIndex].id)} />
+      <EChart option={option} height={Math.max(240, rows.length * 18 + 30)} ariaLabel={t('Ranking of countries by {name}', { name: indicator.label })} onClick={(p) => rows[p.dataIndex] && selectCountry(rows[p.dataIndex].id)} />
       <p className="caption">
-        <strong>How the ranking works:</strong> {indicator.polarity === 'benefit' ? 'higher' : 'lower'} values count as more affordable. Covers {rows.length} of {total} countries in the selected region for {year}
-        {year !== filters.year ? ` (the latest year with wide coverage for this measure; ${filters.year} is not yet available)` : ''}. Countries without data are left out, not ranked last.
-        {indicator.kind === 'level' && indicator.indexBase ? ` This index ranks change since ${indicator.indexBase}, not price levels.` : ''}
+        <strong>{t('How the ranking works:')}</strong> {indicator.polarity === 'benefit' ? t('higher values count as more affordable.') : t('lower values count as more affordable.')}{' '}
+        {t('Covers {n} of {total} countries in the selected region for {year}', { n: rows.length, total, year })}
+        {year !== filters.year ? ` ${t('(the latest year with wide coverage for this measure; {year} is not yet available)', { year: filters.year })}` : ''}. {t('Countries without data are left out, not ranked last.')}
+        {indicator.kind === 'level' && indicator.indexBase ? ` ${t('This index ranks change since {year}, not price levels.', { year: indicator.indexBase })}` : ''}
       </p>
     </div>
   );
@@ -209,16 +210,16 @@ function KeptUp() {
   const base = has(filters.baseYear) === best ? filters.baseYear : span.find((y) => has(y) === best) ?? filters.baseYear;
   const xs = years(Math.max(filters.startYear, 2005, base - 3), filters.endYear);
   const series = parts.map(([k, label], i) => {
-    const t = transform(ind(k).series[id ?? ''], ind(k), 'index', base);
+    const tr = transform(ind(k).series[id ?? ''], ind(k), 'index', base);
     return {
-      name: label,
+      name: t(label),
       type: 'line',
       showSymbol: false,
       connectNulls: false,
       lineStyle: { width: 2, color: SERIES[i] },
       itemStyle: { color: SERIES[i] },
-      endLabel: { show: true, formatter: label, color: INK, fontSize: 11, distance: 6 },
-      data: xs.map((y) => { const o = obsAt(t, y); return o ? [String(y), o[1]] : null; }),
+      endLabel: { show: true, formatter: t(label), color: INK, fontSize: 11, distance: 6 },
+      data: xs.map((y) => { const o = obsAt(tr, y); return o ? [String(y), o[1]] : null; }),
     };
   });
   const empty = series.filter((s) => !s.data.some(Boolean)).map((s) => s.name);
@@ -243,8 +244,8 @@ function KeptUp() {
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">{id ? <><Flag id={id} /> {countryName(id)}:</> : null} prices vs pay since {base}</h3>
-          <p className="chart-unit">Index, {base} = 100</p>
+          <h3 className="chart-title">{id ? <><Flag id={id} /> {countryName(id)}:</> : null} {t('prices vs pay since {year}', { year: base })}</h3>
+          <p className="chart-unit">{t('Index, {year} = 100', { year: base })}</p>
         </div>
         <div className="pills">
           {filters.countries.map((c) => (
@@ -252,13 +253,13 @@ function KeptUp() {
           ))}
         </div>
       </div>
-      <EChart option={option} height={340} ariaLabel={`House prices, rents, consumer prices and median income indexed to ${base}`} />
+      <EChart option={option} height={340} ariaLabel={t('House prices, rents, consumer prices and median income indexed to {year}', { year: base })} />
       <p className="caption">
         {gap !== undefined
-          ? <>Since {base}, house prices in {countryName(id!)} have grown <strong>{fmtSigned(gap, 0, ' percentage points')}</strong> {gap > 0 ? 'faster' : 'slower'} than median income (to {b![0]} and {d![0]}).</>
-          : 'Not every series is available for this country and base year.'}
-        {empty.length > 0 && ` No data: ${empty.join(', ')}.`}
-        {base !== filters.baseYear && ` The base year was moved from ${filters.baseYear} to ${base} because ${countryName(id!)}'s data start later.`} Income is median equivalised household income in national currency (EU-SILC), so it compares the country with itself.
+          ? <>{t('Since {year}, house prices in {country} have grown', { year: base, country: countryName(id!) })} <strong>{fmt(Math.abs(gap), 0)} {t('percentage points')}</strong> {gap > 0 ? t('faster than median income') : t('slower than median income')} ({t('to {a} and {b}', { a: b![0], b: d![0] })}).</>
+          : t('Not every series is available for this country and base year.')}
+        {empty.length > 0 && ` ${t('No data: {list}.', { list: empty.join(', ') })}`}
+        {base !== filters.baseYear && ` ${t('The base year was moved from {from} to {to} because the data for {country} start later.', { from: filters.baseYear, to: base, country: countryName(id!) })}`} {t('Income is median equivalised household income in national currency (EU-SILC), so it compares the country with itself.')}
       </p>
     </div>
   );
@@ -280,7 +281,7 @@ function PriceVsWealth() {
       return x !== undefined && y !== undefined ? [{ value: [x, y], id: c.id, name: countryName(c.id) }] : [];
     });
   const series = groups.map(([name, color, test]) => ({
-    name,
+    name: t(name),
     type: 'scatter',
     symbolSize: (_: any, p: any) => (filters.countries.includes(p.data.id) ? 13 : 9),
     itemStyle: { color, borderColor: '#fffdf8', borderWidth: 1.5, opacity: 0.9 },
@@ -292,26 +293,25 @@ function PriceVsWealth() {
     ...baseOption(),
     grid: { left: 8, right: 24, top: 36, bottom: 28, containLabel: true },
     legend: { top: 0, right: 0, textStyle: { color: INK, fontSize: 12 } },
-    tooltip: { ...(baseOption().tooltip as object), formatter: (p: any) => `<b>${p.data.name}</b>, ${year}<br/>Consumption per person: <b>${p.data.value[0]}</b> (EU = 100)<br/>Price level: <b>${p.data.value[1]}</b> (EU = 100)` },
-    xAxis: { type: 'value', name: 'Consumption per person in purchasing power (EU-27 = 100) →', nameLocation: 'middle', nameGap: 26, scale: true, ...axisCommon },
-    yAxis: { type: 'value', name: 'Price level (EU-27 = 100)', nameLocation: 'end', scale: true, ...axisCommon },
+    tooltip: { ...(baseOption().tooltip as object), formatter: (p: any) => `<b>${p.data.name}</b>, ${year}<br/>${t('Consumption per person')}: <b>${p.data.value[0]}</b> (${t('EU = 100')})<br/>${t('Price level')}: <b>${p.data.value[1]}</b> (${t('EU = 100')})` },
+    xAxis: { type: 'value', name: t('Consumption per person in purchasing power (EU-27 = 100) →'), nameLocation: 'middle', nameGap: 26, scale: true, ...axisCommon },
+    yAxis: { type: 'value', name: t('Price level (EU-27 = 100)'), nameLocation: 'end', scale: true, ...axisCommon },
     series: [
       ...series,
-      { type: 'scatter', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: '#b9b0a0', width: 1, type: 'solid' }, label: { formatter: 'EU average', color: INK_3, fontSize: 10, position: 'insideEndTop' }, data: [{ xAxis: 100 }, { yAxis: 100 }] } },
+      { type: 'scatter', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: '#b9b0a0', width: 1, type: 'solid' }, label: { formatter: t('EU average'), color: INK_3, fontSize: 10, position: 'insideEndTop' }, data: [{ xAxis: 100 }, { yAxis: 100 }] } },
     ],
   };
   return (
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">Cheaper, but poorer? Prices and living standards, {year}</h3>
-          <p className="chart-unit">Both axes: EU-27 = 100 · Eurostat purchasing power parities</p>
+          <h3 className="chart-title">{t('Cheaper, but poorer? Prices and living standards, {year}', { year })}</h3>
+          <p className="chart-unit">{t('Both axes: EU-27 = 100 · Eurostat purchasing power parities')}</p>
         </div>
       </div>
-      <EChart option={option} height={420} ariaLabel={`Scatter plot of price levels against consumption per person, ${year}`} onClick={(p) => p.data?.id && selectCountry(p.data.id)} />
+      <EChart option={option} height={420} ariaLabel={t('Scatter plot of price levels against consumption per person, {year}', { year })} onClick={(p) => p.data?.id && selectCountry(p.data.id)} />
       <p className="caption">
-        Countries to the bottom-left are cheap but households can afford less; top-right are expensive but richer. Western Balkan prices sit well below the EU
-        average, but so does what people can consume. Kosovo, Ukraine, Moldova and Belarus are not covered by Eurostat's purchasing power programme for this measure.
+        {t('Countries to the bottom-left are cheap but households can afford less; top-right are expensive but richer. Western Balkan prices sit well below the EU average, but so does what people can consume. Kosovo, Ukraine, Moldova and Belarus are not covered by Eurostat’s purchasing power programme for this measure.')}
       </p>
     </div>
   );

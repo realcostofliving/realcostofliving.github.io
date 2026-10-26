@@ -4,8 +4,9 @@ import { colorScale } from '../lib/scales';
 import type { Indicator } from '../lib/types';
 import Flag from './Flag';
 import Sparkline from './Sparkline';
+import { numLocale, t } from '../lib/i18n';
 
-const PROFILE = ['price_m2', 'hpi_growth', 'rent_growth', 'inflation', 'overburden', 'housing_cost_share', 'pti', 'pli', 'aic_pps', 'median_income_pps'];
+const PROFILE = ['price_m2', 'hpi_growth', 'rent_growth', 'inflation', 'min_wage', 'median_income_pps', 'living_with_parents', 'overburden', 'housing_cost_share', 'pti', 'pli'];
 const LATEST = ['hpi_growth', 'rent_growth', 'inflation', 'food_inflation', 'energy_inflation'];
 const REGION_NAMES = { N: 'Northern Europe', W: 'Western Europe', S: 'Southern Europe', E: 'Eastern Europe' };
 
@@ -26,9 +27,9 @@ function Leaderboard() {
   const show = rows.length > 12 ? [...rows.slice(0, 6), null, ...rows.slice(-6)] : rows;
   return (
     <div className="leader">
-      <p className="eyebrow">Ranking · {filters.year}</p>
+      <p className="eyebrow">{t('Ranking')} · {filters.year}</p>
       <h3 className="panel-title">{indicator.short}</h3>
-      <p className="muted small">Highest to lowest across {rows.length} countries with data. Select one to see its full profile.</p>
+      <p className="muted small">{t('Highest to lowest across {n} countries with data. Select one to see its full profile.', { n: rows.length })}</p>
       <ol className="leader-list">
         {show.map((r) =>
           r === null ? (
@@ -48,7 +49,7 @@ function Leaderboard() {
           ),
         )}
       </ol>
-      {!rows.length && <p className="empty">No country in this region has data for {filters.year}.</p>}
+      {!rows.length && <p className="empty">{t('No country in this region has data for {year}.', { year: filters.year })}</p>}
     </div>
   );
 }
@@ -66,13 +67,13 @@ function Profile({ id }: { id: string }) {
         <div>
           <h3 className="panel-title">{c.name}</h3>
           <p className="badges">
-            <span className="badge">{REGION_NAMES[c.region]}</span>
-            {c.eu && <span className="badge">EU member</span>}
-            {c.euro && <span className="badge">Euro area</span>}
-            {c.wb && <span className="badge badge-accent">Western Balkans</span>}
+            <span className="badge">{t(REGION_NAMES[c.region])}</span>
+            {c.eu && <span className="badge">{t('EU member')}</span>}
+            {c.euro && <span className="badge">{t('Euro area')}</span>}
+            {c.wb && <span className="badge badge-accent">{t('Western Balkans')}</span>}
           </p>
         </div>
-        <button className="close" onClick={() => set({ focus: null })} aria-label="Close country profile">×</button>
+        <button className="close" onClick={() => set({ focus: null })} aria-label={t('Close country profile')}>×</button>
       </div>
       <HomeCost id={id} />
       <ul className="profile-list">
@@ -80,17 +81,17 @@ function Profile({ id }: { id: string }) {
       </ul>
       {latest.length > 0 && (
         <div className="latest">
-          <p className="eyebrow">Latest 2026 readings · partial year</p>
+          <p className="eyebrow">{t('Latest 2026 readings · partial year')}</p>
           <ul>
             {latest.map(({ ind: i, o }) => (
               <li key={i.id}>
                 <span>{i.short}</span>
                 <span className="latest-v">{fmtSigned(o!.v, 1, '%')}</span>
-                <span className="muted small">{periodLabel(o!.p)}{o!.f?.includes('p') ? ' · provisional' : ''}</span>
+                <span className="muted small">{periodLabel(o!.p)}{o!.f?.includes('p') ? ` · ${t('provisional')}` : ''}</span>
               </li>
             ))}
           </ul>
-          <p className="muted small">Year-on-year change in the latest published month or quarter. Not an annual figure.</p>
+          <p className="muted small">{t('Year-on-year change in the latest published month or quarter. Not an annual figure.')}</p>
         </div>
       )}
       <div className="profile-actions">
@@ -101,10 +102,10 @@ function Profile({ id }: { id: string }) {
             document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          Compare {c.name}
+          {t('Compare {country}', { country: c.name })}
         </button>
         <button className="btn btn-ghost" onClick={() => { set({ countries: [id] , benchmark: true }); document.getElementById('trends')?.scrollIntoView({ behavior: 'smooth' }); }}>
-          {c.name} vs EU-27
+          {t('{country} vs EU-27', { country: c.name })}
         </button>
       </div>
     </div>
@@ -114,14 +115,14 @@ function Profile({ id }: { id: string }) {
 function HomeCost({ id }: { id: string }) {
   const { data, filters } = useApp();
   const h = homeCost(data, id, filters.year);
-  if (!h) return <p className="home-card muted small">No comparable price per m² is available for this country.</p>;
+  if (!h) return <p className="home-card muted small">{t('No comparable price per m² is available for this country.')}</p>;
   return (
     <div className="home-card">
-      <p className="eyebrow">What a home costs · {h.year}</p>
+      <p className="eyebrow">{t('What a home costs')} · {h.year}</p>
       <p className="home-price">{fmtEuroRound(h.price)}</p>
       <p className="small">
-        for a {TYPICAL_HOME_M2} m² home at about €{Math.round(h.perM2).toLocaleString('en-GB')} per m²
-        {h.years !== undefined && <> — roughly <strong>{fmt(h.years, 1)} years</strong> of a typical person’s disposable income</>}.
+        {t('for a {size} m² home at about {m2} per m²', { size: TYPICAL_HOME_M2, m2: `€${Math.round(h.perM2).toLocaleString(numLocale())}` })}
+        {h.years !== undefined && <> — {t('roughly')} <strong>{t('{n} years', { n: fmt(h.years, 1) })}</strong> {t('of a typical person’s disposable income')}</>}.
       </p>
     </div>
   );
@@ -138,11 +139,11 @@ function ProfileRow({ ind, id }: { ind: Indicator; id: string }) {
     <li className={`profile-row ${filters.indicator === ind.id ? 'on' : ''}`}>
       <button className="linklike profile-label" onClick={() => set({ indicator: ind.id })}>{ind.short}</button>
       <span className="profile-val">
-        {shown ? (ind.kind === 'rate' ? fmtSigned(shown[1], ind.decimals, ind.unitShort) : fmtValue(ind, shown[1])) : <span className="na">No data</span>}
+        {shown ? (ind.kind === 'rate' ? fmtSigned(shown[1], ind.decimals, ind.unitShort) : fmtValue(ind, shown[1])) : <span className="na">{t('No data')}</span>}
         {shown && shown[0] !== filters.year && <span className="yr">{shown[0]}</span>}
-        {flags.length > 0 && <span className="flagmark" title={flags.join(', ')}>{flags[0][0]}</span>}
+        {flags.length > 0 && <span className="flagmark" title={flags.join(', ')}>{shown![2]![0]}</span>}
       </span>
-      {s && s.length > 1 ? <Sparkline series={s} from={2004} to={2025} highlight={shown?.[0]} width={86} height={22} zeroLine={ind.kind === 'rate'} label={`${ind.short} trend`} /> : <span className="spark-empty" />}
+      {s && s.length > 1 ? <Sparkline series={s} from={2004} to={2025} highlight={shown?.[0]} width={86} height={22} zeroLine={ind.kind === 'rate'} label={t('{name} trend', { name: ind.short })} /> : <span className="spark-empty" />}
     </li>
   );
 }

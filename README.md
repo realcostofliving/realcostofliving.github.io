@@ -14,7 +14,8 @@ Every statistic comes from an official source (Eurostat, the OECD, the Bank for 
 |---|---|
 | **Search** | A search button at the top (or press `/` or Ctrl+K) finds any country by name — including other spellings like “UK”, “Turkey” or “Kosova” — and opens its profile or adds it to the comparison. |
 | **Start here** | Plain-language questions that jump to the right section, four headline facts, and a four-term glossary (€ per m², index, EU = 100, missing data). |
-| **Country table** | All 41 countries in one searchable, sortable table: home price per m², cost of a 70 m² home, years of income, house price and rent changes, inflation, housing costs, housing stress, price level and median income. Tick up to five countries to compare, filter by region, download as CSV. |
+| **Country table** | All 41 countries in one searchable, sortable table: home price per m², cost of a 70 m² home, years of income, house price and rent changes, inflation, housing costs, housing stress, minimum wage, median income, young adults living with parents and price level. Tick up to five countries to compare, filter by region, download as CSV. |
+| **Calculator** | “Could you afford a home?” Enter your take-home pay, home size and savings rate: see the price, years of pay, years to save a deposit, the monthly mortgage (with your own rate, term and deposit), the size you could afford, and how long the same pay would take in every other country. Runs entirely in the browser. |
 | **Overview** | Four KPI cards — house price growth, rent inflation, housing costs as a share of income, price-to-income ratio — for the selected country, the EU-27 aggregate, or the median of a region (clearly labelled), with sparklines, change on the previous year, the benchmark and the latest 2026 reading. |
 | **Map** | Choropleth of Europe for 28 indicators — starting with real home prices in € per m², written on each country — a year slider with a play button, zoom to the Balkans, keyboard-accessible countries, rich tooltips (value, unit, change since the previous available year, benchmark, data status, source) and a distinct pattern for missing data. |
 | **Country panel** | Click a country for a profile with nine key measures, sparklines and 2026 partial-year readings; or see a live ranking when nothing is selected. |
@@ -24,7 +25,9 @@ Every statistic comes from an official source (Eurostat, the OECD, the Bank for 
 | **Cost of living** | Price levels by category (PPP-based, EU = 100) and inflation by category (HICP), with the difference between the two explained. |
 | **Sources & methods** | Full metadata for every indicator (definition, unit, dataset id, links to dataset and API, coverage, update date, flags, caveats), a coverage matrix, country groupings and known limitations. |
 
-All filters (region, indicator, year, period, values mode, base year, benchmark, countries) are kept in the URL, so any view can be shared.
+All filters (region, indicator, year, period, values mode, base year, benchmark, countries) and the language are kept in the URL, so any view can be shared — the **Share** button copies the link (or opens the phone’s share sheet). Shared links show a preview card with a map of home prices.
+
+**Languages:** English and Albanian (Shqip). The EN / SQ switch translates the interface, country and indicator names, explanations and number formats; the sources & methods page stays in English. The choice is remembered, and Albanian is picked automatically for browsers set to Albanian.
 
 ## Data coverage
 
@@ -45,6 +48,9 @@ Coverage is computed from the committed snapshot (`public/data/data.json`). "WB"
 | Price levels (overall, food, housing, energy, transport, restaurants) | 37–38 / 41 | 2004–2024 | AL, BA, ME, MK, RS (+ XK for some) | Eurostat `prc_ppp_ind` |
 | Consumption and GDP per person in PPS | 37 / 41 | 2004–2024 | AL, BA, ME, MK, RS | Eurostat `prc_ppp_ind` |
 | Median household income (PPS, €, national currency) | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_di03` |
+| Minimum wage (€ a month, 1 January; latest July 2026) | 30 / 41 | 2004–2026 | AL, ME, MK, RS | Eurostat `earn_mw_cur` (countries without a statutory minimum wage show no data) |
+| Young adults (18–34) living with their parents | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_lvps08` |
+| Average age of leaving the parental home | 34 / 41 | 2004–2025 | BA, ME, MK, RS | Eurostat `yth_demo_030` |
 | GDP per person (international $) | 41 / 41 | 2004–2025 | all six | World Bank `NY.GDP.PCAP.PP.CD` |
 
 Many series start after 2004 for individual countries (for example EU-SILC from 2013 in Serbia and 2017 in Albania; Kosovo has a single EU-SILC year). The coverage matrix on the methodology page shows the exact range for every country.
@@ -75,6 +81,8 @@ npm run preview    # serve the production build
 npm run data:fetch     # download all indicators from the official APIs → public/data/data.json
 npm run data:validate  # integrity checks (exit code 1 on failure)
 npm run data:geo       # rebuild map boundaries → public/data/europe.topo.json (rarely needed)
+npm run og             # redraw the link-preview image public/og.png from the current data
+npm run i18n:check     # list interface texts without an Albanian translation
 ```
 
 - `scripts/config/countries.mjs` — country list, codes per source, regions and groupings.
@@ -100,6 +108,10 @@ To add an indicator, add an entry to `indicators.mjs`, run `npm run data:fetch &
 To deploy your own copy: fork the repository, then in *Settings → Pages* set *Source* to *GitHub Actions*. GitHub pauses scheduled workflows in repositories with no activity for 60 days; re-enable it from the Actions tab if that happens.
 
 The app uses hash-based routing (`#/`, `#/methodology`) and relative asset paths, so it works under any repository path without a 404 fallback.
+
+### Translations
+
+Interface strings are written in English and wrapped in `t('…')`. Albanian versions live in `src/lib/sq.ts` (interface texts, country names, regions and indicator names/explanations). After adding or changing a text, run `npm run i18n:check` and add the missing Albanian lines; anything untranslated falls back to English.
 
 ## Technology
 

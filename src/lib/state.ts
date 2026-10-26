@@ -97,6 +97,8 @@ export interface AppCtx {
   countryName: (id: string) => string;
   selectCountry: (id: string) => void;
   dashHref: string;
+  lang: import('./i18n').Lang;
+  setLang: (l: import('./i18n').Lang) => void;
 }
 
 export const Ctx = createContext<AppCtx | null>(null);

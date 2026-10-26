@@ -1,4 +1,5 @@
 import type { Country, Dataset, Indicator, Obs, RegionId, ValueMode } from './types';
+import { numLocale, t } from './i18n';
 
 const base = import.meta.env.BASE_URL;
 
@@ -27,7 +28,7 @@ export const FLAG_LABELS: Record<string, string> = {
 
 export function describeFlag(f?: string): string[] {
   if (!f) return [];
-  return [...f].map((ch) => FLAG_LABELS[ch]).filter(Boolean);
+  return [...f].map((ch) => FLAG_LABELS[ch]).filter(Boolean).map((l) => t(l));
 }
 
 export function inRegion(c: Country, region: RegionId): boolean {
@@ -97,7 +98,7 @@ export function homeCost(data: Dataset, id: string, year: number) {
 /** Round a euro amount for plain-language display (e.g. €120,400 → "€120,000"). */
 export function fmtEuroRound(v: number): string {
   const step = v >= 100000 ? 5000 : 1000;
-  return `€${(Math.round(v / step) * step).toLocaleString('en-GB')}`;
+  return `€${(Math.round(v / step) * step).toLocaleString(numLocale())}`;
 }
 
 export function seriesFor(ind: Indicator, id: string): Obs[] | undefined {
@@ -149,9 +150,9 @@ export function transform(series: Obs[] | undefined, ind: Indicator, mode: Value
 export function modeUnit(ind: Indicator, mode: ValueMode, baseYear: number): string {
   switch (mode) {
     case 'original': return ind.unit;
-    case 'yoy': return ind.kind === 'rate' ? ind.unit : '% change on previous year';
-    case 'change': return ind.kind === 'rate' ? `Percentage points vs ${baseYear}` : `% change since ${baseYear}`;
-    case 'index': return `Index, ${baseYear} = 100`;
+    case 'yoy': return ind.kind === 'rate' ? ind.unit : t('% change on previous year');
+    case 'change': return ind.kind === 'rate' ? t('Percentage points vs {year}', { year: baseYear }) : t('% change since {year}', { year: baseYear });
+    case 'index': return t('Index, {year} = 100', { year: baseYear });
   }
 }
 
@@ -169,7 +170,7 @@ export function median(values: number[]): number | undefined {
 
 export function fmt(v: number | undefined, decimals = 1, unitShort = ''): string {
   if (v === undefined || !Number.isFinite(v)) return '—';
-  const n = Math.abs(v) >= 1000 ? v.toLocaleString('en-GB', { maximumFractionDigits: 0 }) : v.toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  const n = Math.abs(v) >= 1000 ? v.toLocaleString(numLocale(), { maximumFractionDigits: 0 }) : v.toLocaleString(numLocale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   return `${n}${unitShort}`;
 }
 
@@ -184,9 +185,11 @@ export function fmtValue(ind: Indicator, v: number | undefined): string {
 }
 
 export function periodLabel(p: string): string {
+  const s = p.match(/^(\d{4})-S([12])$/);
+  if (s) return `${s[2] === '1' ? t('Jan') : t('Jul')} ${s[1]}`;
   if (/Q\d$/.test(p)) return `${p.slice(5)} ${p.slice(0, 4)}`;
   const [y, m] = p.split('-');
-  if (m) return new Date(Date.UTC(+y, +m - 1, 1)).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  if (m) return new Date(Date.UTC(+y, +m - 1, 1)).toLocaleDateString(numLocale(), { month: 'short', year: 'numeric', timeZone: 'UTC' });
   return p;
 }
 

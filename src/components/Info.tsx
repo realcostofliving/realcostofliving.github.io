@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { t } from '../lib/i18n';
 
 /** An accessible "what does this mean?" disclosure. Opens on click/Enter, closes on Escape. */
-export default function Info({ title, children, label = 'What does this mean?' }: { title: string; children: ReactNode; label?: string }) {
+export default function Info({ title, children, label }: { title: string; children: ReactNode; label?: string }) {
+  label ??= t('What does this mean?');
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);

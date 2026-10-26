@@ -6,6 +6,7 @@ import type { Indicator, Obs, ValueMode } from '../lib/types';
 import EChart, { axisCommon, baseOption, INK, INK_3 } from './EChart';
 import Info from './Info';
 import { MODE_LABELS } from './FilterBar';
+import { t } from '../lib/i18n';
 
 const THEMES: [string, string][] = [
   ['hpi', 'House prices'],
@@ -55,7 +56,7 @@ export function lineSeries(ind: Indicator, ids: string[], mode: ValueMode, baseY
     });
   });
   if (benchmark && ind.benchmarkSeries) {
-    const label = ind.benchmarkId === 'EA' ? 'Euro area' : 'EU-27';
+    const label = ind.benchmarkId === 'EA' ? t('Euro area') : t('EU-27');
     out.push({
       name: label,
       type: 'line',
@@ -91,7 +92,7 @@ export function lineOption(ind: Indicator, series: any[], xs: number[], unit: st
             return `<div style="display:flex;gap:10px;justify-content:space-between;align-items:center"><span>${p.marker}${p.seriesName}</span><b style="font-variant-numeric:tabular-nums">${fmt(p.data.value[1], decimals)}</b></div>${f.length ? `<div style="color:#6b7385;font-size:11px;margin:-2px 0 2px 16px">${f.join(', ')}</div>` : ''}`;
           })
           .join('');
-        return `<div style="font-weight:600;margin-bottom:4px">${y}</div>${rows || '<span style="color:#6b7385">No data</span>'}<div style="color:#6b7385;font-size:11px;margin-top:4px">${unit}</div>`;
+        return `<div style="font-weight:600;margin-bottom:4px">${y}</div>${rows || `<span style="color:#6b7385">${t('No data')}</span>`}<div style="color:#6b7385;font-size:11px;margin-top:4px">${unit}</div>`;
       },
     },
     xAxis: { type: 'category', data: xs.map(String), boundaryGap: false, ...axisCommon, splitLine: { show: false } },
@@ -114,28 +115,28 @@ export default function TrendExplorer() {
   return (
     <section id="trends" className="section" aria-labelledby="trends-title">
       <div className="section-head">
-        <p className="eyebrow">Historical trends · {filters.startYear}–{filters.endYear}</p>
-        <h2 id="trends-title">How have costs changed over two decades?</h2>
-        <p className="lede">Compare countries over time. Switch to <em>Indexed</em> to see who has seen the fastest rise, whatever their starting level.</p>
+        <p className="eyebrow">{t('Historical trends')} · {filters.startYear}–{filters.endYear}</p>
+        <h2 id="trends-title">{t('How have costs changed over two decades?')}</h2>
+        <p className="lede">{t('Compare countries over time. Switch to “Growth index” to see who has seen the fastest rise, whatever their starting level.')}</p>
       </div>
-      <div className="tabs" role="tablist" aria-label="Theme">
+      <div className="tabs" role="tablist" aria-label={t('Theme')}>
         {THEMES.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={filters.indicator === id} className={`tab ${filters.indicator === id ? 'on' : ''}`} onClick={() => set({ indicator: id })}>
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
       <div className="card chart-card">
         <div className="chart-head">
           <div>
-            <h3 className="chart-title">{indicator.label}{mode !== 'original' ? ` — ${MODE_LABELS[mode].toLowerCase()}${mode === 'change' || mode === 'index' ? ` ${filters.baseYear}` : ''}` : ''}</h3>
+            <h3 className="chart-title">{indicator.label}{mode !== 'original' ? ` — ${t(MODE_LABELS[mode]).toLowerCase()}${mode === 'change' || mode === 'index' ? ` ${filters.baseYear}` : ''}` : ''}</h3>
             <p className="chart-unit">{unit}</p>
           </div>
           <div className="chart-tools">
-            <div className="seg seg-sm" role="radiogroup" aria-label="Values">
+            <div className="seg seg-sm" role="radiogroup" aria-label={t('Values')}>
               {(Object.keys(MODE_LABELS) as ValueMode[]).map((m) => (
                 <button key={m} role="radio" aria-checked={filters.mode === m} className={filters.mode === m ? 'on' : ''} disabled={!modeSupported(indicator, m)} onClick={() => set({ mode: m })}>
-                  {MODE_LABELS[m]}
+                  {t(MODE_LABELS[m])}
                 </button>
               ))}
             </div>
@@ -146,16 +147,16 @@ export default function TrendExplorer() {
             </Info>
           </div>
         </div>
-        <EChart option={option} height={380} ariaLabel={`Line chart of ${indicator.label} for ${filters.countries.map(countryName).join(', ')}`} />
+        <EChart option={option} height={380} ariaLabel={t('Line chart of {name} for {countries}', { name: indicator.label, countries: filters.countries.map(countryName).join(', ') })} />
         <p className="caption">
           {indicator.explainer}
-          {filters.mode !== mode && ' Indicator is already a rate of change, so original values are shown.'}
-          {' '}Hollow points are provisional, estimated or mark a break in the series. Gaps mean the source has no observation — nothing is filled in.
+          {filters.mode !== mode && ` ${t('Indicator is already a rate of change, so original values are shown.')}`}
+          {' '}{t('Hollow points are provisional, estimated or mark a break in the series. Gaps mean the source has no observation — nothing is filled in.')}
         </p>
         {(missing.length > 0 || noBase.length > 0) && (
           <p className="notice">
-            {missing.length > 0 && <>No data for {missing.join(', ')} on this measure. </>}
-            {noBase.length > 0 && <>{noBase.join(', ')}: no observation in {filters.baseYear}, so the series cannot be rebased — try another base year.</>}
+            {missing.length > 0 && <>{t('No data for {countries} on this measure.', { countries: missing.join(', ') })} </>}
+            {noBase.length > 0 && <>{t('{countries}: no observation in {year}, so the series cannot be rebased — try another base year.', { countries: noBase.join(', '), year: filters.baseYear })}</>}
           </p>
         )}
       </div>
@@ -163,7 +164,7 @@ export default function TrendExplorer() {
       <div className="sr-only">
         <table>
           <caption>{indicator.label} ({unit})</caption>
-          <thead><tr><th>Country</th>{xs.map((y) => <th key={y}>{y}</th>)}</tr></thead>
+          <thead><tr><th>{t('Country')}</th>{xs.map((y) => <th key={y}>{y}</th>)}</tr></thead>
           <tbody>
             {series.map((s: any) => (
               <tr key={s.name}><th>{s.name}</th>{s.data.map((d: any, i: number) => <td key={i}>{d ? fmt(d.value[1], indicator.decimals) : '—'}</td>)}</tr>
@@ -211,16 +212,16 @@ function HeatStripes() {
     <div className="card chart-card">
       <div className="chart-head">
         <div>
-          <h3 className="chart-title">Every country, every year: {indicator.short.toLowerCase()}</h3>
-          <p className="chart-unit">{indicator.unit} · same colour scale as the map · sorted by latest value</p>
+          <h3 className="chart-title">{t('Every country, every year: {name}', { name: indicator.short.toLowerCase() })}</h3>
+          <p className="chart-unit">{indicator.unit} · {t('same colour scale as the map · sorted by latest value')}</p>
         </div>
       </div>
       {rows.length ? (
-        <EChart renderer="svg" option={option} height={Math.max(220, rows.length * 19 + 50)} ariaLabel={`Heatmap of ${indicator.label} by country and year`} onClick={(p) => { if (p.data) { selectCountry(rows[p.data.value[1]].id); set({ year: xs[p.data.value[0]] }); } }} />
+        <EChart renderer="svg" option={option} height={Math.max(220, rows.length * 19 + 50)} ariaLabel={t('Heatmap of {name} by country and year', { name: indicator.label })} onClick={(p) => { if (p.data) { selectCountry(rows[p.data.value[1]].id); set({ year: xs[p.data.value[0]] }); } }} />
       ) : (
-        <p className="empty">No country in this region has data on this measure.</p>
+        <p className="empty">{t('No country in this region has data on this measure.')}</p>
       )}
-      <p className="caption">Each row is a country, each square a year. Blank squares are missing observations (<span className="inline-swatch" style={{ background: NO_DATA }} /> not zero). Click a square to show that country and year on the map.</p>
+      <p className="caption">{t('Each row is a country, each square a year. Blank squares are missing observations, not zero. Click a square to show that country and year on the map.')} <span className="inline-swatch" style={{ background: NO_DATA }} /></p>
     </div>
   );
 }

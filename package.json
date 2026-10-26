@@ -11,6 +11,8 @@
     "data:fetch": "node scripts/fetch-data.mjs",
     "data:geo": "node scripts/build-geo.mjs",
     "data:validate": "node scripts/validate-data.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "og": "node scripts/build-og.mjs",
     "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
@@ -30,6 +32,7 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/d3-geo": "^3.1.0",
     "@types/d3-interpolate": "^3.0.4",
     "@types/d3-scale": "^4.0.9",

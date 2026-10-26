@@ -3,6 +3,8 @@ import { useApp, MAX_COUNTRIES } from '../lib/state';
 import { inRegion } from '../lib/data';
 import { SERIES } from '../lib/scales';
 import Flag from './Flag';
+import { t } from '../lib/i18n';
+import { matchScore } from '../lib/ui';
 
 interface Props {
   min?: number;
@@ -43,8 +45,7 @@ export default function CountryPicker({ min = 1, compact }: Props) {
   }, [open]);
 
   const options = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return data.countries.filter((c) => inRegion(c, filters.region) || filters.region === 'ALL').filter((c) => !t || c.name.toLowerCase().includes(t) || c.id.toLowerCase() === t);
+    return data.countries.filter((c) => inRegion(c, filters.region) || filters.region === 'ALL').filter((c) => matchScore(c, q) > 0);
   }, [data, q, filters.region]);
 
   const toggle = (id: string) => {
@@ -58,45 +59,45 @@ export default function CountryPicker({ min = 1, compact }: Props) {
 
   return (
     <div className={`picker ${compact ? 'picker-compact' : ''}`} ref={box}>
-      <ul className="chips" aria-label="Selected countries">
+      <ul className="chips" aria-label={t('Selected countries')}>
         {sel.map((id, i) => (
           <li key={id} className="chip">
             <span className="swatch" style={{ background: SERIES[i] }} aria-hidden="true" />
             <Flag id={id} />
             <span className="chip-name">{name(id)}</span>
-            <button className="chip-x" onClick={() => toggle(id)} disabled={sel.length <= min} aria-label={`Remove ${name(id)}`} title={sel.length <= min ? `Keep at least ${min}` : `Remove ${name(id)}`}>
+            <button className="chip-x" onClick={() => toggle(id)} disabled={sel.length <= min} aria-label={t('Remove {country}', { country: name(id) })} title={sel.length <= min ? t('Keep at least {n}', { n: min }) : t('Remove {country}', { country: name(id) })}>
               ×
             </button>
           </li>
         ))}
         <li>
           <button className="chip-add" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={listId} disabled={sel.length >= MAX_COUNTRIES && !open}>
-            + Add country {sel.length >= MAX_COUNTRIES ? '(max 5)' : ''}
+            + {t('Add country')} {sel.length >= MAX_COUNTRIES ? `(${t('max 5')})` : ''}
           </button>
         </li>
       </ul>
       {open && (
-        <div className="popover" id={listId} role="dialog" aria-label="Choose countries">
-          <input ref={input} className="search" type="search" placeholder="Search countries…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search countries" />
+        <div className="popover" id={listId} role="dialog" aria-label={t('Choose countries')}>
+          <input ref={input} className="search" type="search" placeholder={t('Search countries…')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('Search countries')} />
           {!q && (
             <div className="presets">
-              <span className="eyebrow">Quick comparisons</span>
+              <span className="eyebrow">{t('Quick comparisons')}</span>
               <div className="preset-row">
                 {PRESETS.map((p) => (
                   <button key={p.label} className="preset" onClick={() => { set({ countries: p.ids, focus: p.ids[0] }); setOpen(false); }}>
-                    {p.label}
+                    {t(p.label)}
                   </button>
                 ))}
               </div>
             </div>
           )}
-          <div className="options" role="listbox" aria-multiselectable="true" aria-label="Countries">
+          <div className="options" role="listbox" aria-multiselectable="true" aria-label={t('Countries')}>
             {GROUPS.map(([label, test]) => {
               const list = options.filter(test);
               if (!list.length) return null;
               return (
                 <div key={label} className="opt-group">
-                  <div className="eyebrow">{label}</div>
+                  <div className="eyebrow">{t(label)}</div>
                   {list.map((c) => {
                     const on = sel.includes(c.id);
                     const disabled = !on && sel.length >= MAX_COUNTRIES;
@@ -111,7 +112,7 @@ export default function CountryPicker({ min = 1, compact }: Props) {
               );
             })}
           </div>
-          <p className="popover-note">Up to {MAX_COUNTRIES} countries. Colours follow the order of selection.</p>
+          <p className="popover-note">{t('Up to {n} countries. Colours follow the order of selection.', { n: MAX_COUNTRIES })}</p>
         </div>
       )}
     </div>

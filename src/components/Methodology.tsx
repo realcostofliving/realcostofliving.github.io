@@ -3,21 +3,23 @@ import { useApp } from '../lib/state';
 import { FLAG_LABELS, PRICE_BASIS } from '../lib/data';
 import type { Indicator } from '../lib/types';
 import Flag from './Flag';
+import { dateLocale, t } from '../lib/i18n';
 
 const REGION_NAMES: Record<string, string> = { N: 'Northern Europe', W: 'Western Europe', S: 'Southern Europe', E: 'Eastern Europe' };
 const CAT: Record<string, string> = { housing: 'Housing', prices: 'Prices & cost of living', income: 'Income & living standards' };
 
 export default function Methodology() {
-  const { data, dashHref } = useApp();
+  const { data, dashHref, lang } = useApp();
   useEffect(() => {
     const s = new URLSearchParams(location.hash.split('?')[1] ?? '').get('s');
     if (s) setTimeout(() => document.getElementById(s)?.scrollIntoView({ behavior: 'smooth' }), 50);
   }, []);
-  const retrieved = new Date(data.generatedAt).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' });
+  const retrieved = new Date(data.generatedAt).toLocaleString(dateLocale(), { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' });
 
   return (
     <article className="method">
-      <p className="back"><a href={dashHref}>← Back to the explorer</a></p>
+      <p className="back"><a href={dashHref}>← {t('Back to the explorer')}</a></p>
+      {lang === 'sq' && <p className="notice">{t('This page with sources and methods is in English only. Country and indicator names are shown in Albanian.')}</p>}
       <header className="section-head">
         <p className="eyebrow">Sources &amp; methodology</p>
         <h1>Where every number comes from</h1>
@@ -173,7 +175,7 @@ function IndicatorMeta({ ind }: { ind: Indicator }) {
         <dt>Unit</dt><dd>{ind.unit}</dd>
         <dt>Retrieved</dt>
         <dd>
-          {ind.retrievedAt ? new Date(ind.retrievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+          {ind.retrievedAt ? new Date(ind.retrievedAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
           {ind.stale && <span className="caveat-inline"> — the source could not be reached at the latest refresh, so these values come from the earlier retrieval.</span>}
         </dd>
         <dt>Frequency</dt><dd>Annual{ind.latest ? `; latest ${latestPeriods.some((p) => p.includes('Q')) ? 'quarterly' : 'monthly'} reading shown for 2026 (${latestPeriods.join(', ')})` : ''}</dd>
@@ -185,7 +187,7 @@ function IndicatorMeta({ ind }: { ind: Indicator }) {
               return (
                 <li key={k}>
                   {s.org} — {s.name} (<code>{s.dataset}</code>) · <a href={s.url} target="_blank" rel="noreferrer">dataset page</a> · <a href={s.api} target="_blank" rel="noreferrer">API endpoint</a>
-                  {s.updated && <span className="muted"> · source updated {new Date(s.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                  {s.updated && <span className="muted"> · source updated {new Date(s.updated).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                 </li>
               );
             })}
@@ -215,6 +217,7 @@ function IndicatorMeta({ ind }: { ind: Indicator }) {
         <dt>Status of observations</dt>
         <dd>{flags.size ? `Actual values, plus observations flagged as ${[...flags].map((f) => FLAG_LABELS[f] ?? f).join(', ')}` : 'All observations are reported without flags (actual)'}; missing observations are left blank.</dd>
         <dt>Not covered</dt><dd>{missing.length ? missing.join(', ') : 'All countries covered'}</dd>
+        {ind.dropped && ind.dropped.length > 0 && (<><dt>Values left out</dt><dd>{ind.dropped.map((d) => `${countryName(d.id)} ${d.year}`).join(', ')}: the source publishes 0, which is impossible for this measure, so the value is treated as missing.</dd></>)}
         {ind.caveat && (<><dt>Caveats</dt><dd>{ind.caveat}</dd></>)}
       </dl>
     </details>
