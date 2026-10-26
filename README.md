@@ -6,14 +6,14 @@ An interactive, public-interest data explorer covering 41 European countries —
 
 **Live site:** https://kevin19e.github.io/europe-cost-of-living/
 
-Every number comes from an official source (Eurostat, the OECD, the Bank for International Settlements and the World Bank). Nothing is estimated, interpolated or filled with zeros. The site is a static snapshot that a scheduled job refreshes and re-validates every week — it is not live data.
+Every statistic comes from an official source (Eurostat, the OECD, the Bank for International Settlements, the World Bank, the Bank of Albania and Monstat). The one exception is clearly labelled: real home prices in euros per m², which no official body publishes for Europe, come from the Deloitte Property Index. Nothing is estimated, interpolated or filled with zeros. The site is a static snapshot that a scheduled job refreshes and re-validates every week — it is not live data.
 
 ## What's inside
 
 | Section | What it shows |
 |---|---|
 | **Overview** | Four KPI cards — house price growth, rent inflation, housing costs as a share of income, price-to-income ratio — for the selected country, the EU-27 aggregate, or the median of a region (clearly labelled), with sparklines, change on the previous year, the benchmark and the latest 2026 reading. |
-| **Map** | Choropleth of Europe for 27 indicators, a year slider with a play button, zoom to the Balkans, keyboard-accessible countries, rich tooltips (value, unit, change since the previous available year, benchmark, data status, source) and a distinct pattern for missing data. |
+| **Map** | Choropleth of Europe for 28 indicators — starting with real home prices in € per m², written on each country — a year slider with a play button, zoom to the Balkans, keyboard-accessible countries, rich tooltips (value, unit, change since the previous available year, benchmark, data status, source) and a distinct pattern for missing data. |
 | **Country panel** | Click a country for a profile with nine key measures, sparklines and 2026 partial-year readings; or see a live ranking when nothing is selected. |
 | **Trends** | Multi-country line charts with an EU-27 benchmark toggle and four views: original values, yearly change, change since a base year, and indexed (base year = 100). Plus a heatmap of every country and year. |
 | **Compare** | Two to five countries side by side: "did incomes keep up?" grouped bars, a key-figures table with status flags, and small multiples. |
@@ -29,7 +29,8 @@ Coverage is computed from the committed snapshot (`public/data/data.json`). "WB"
 
 | Indicator | Countries | Years | Western Balkans | Source |
 |---|---|---|---|---|
-| House price growth / index | 34 / 41 | 2004–2025 (+ Q2 2026) | MK, RS | Eurostat `prc_hpi_a`, `prc_hpi_q`; BIS `WS_SPP` |
+| **Home price per m² (€)** | 27 / 41 | 2025 (2024 for BA, SI, DK, FR) | AL, BA, ME, RS | Deloitte Property Index 2026 & 2025; Monstat (Montenegro) — not official statistics |
+| House price growth / index | 35 / 41 | 2004–2025 (+ Q2 2026) | AL, MK, RS | Eurostat `prc_hpi_a`, `prc_hpi_q`; BIS `WS_SPP`; Bank of Albania survey |
 | Real house prices | 30 / 41 | 2004–2025 | — | OECD analytical house prices |
 | House price-to-income ratio | 29 / 41 | 2004–2025 | — | OECD analytical house prices |
 | House price-to-rent ratio | 30 / 41 | 2004–2025 | — | OECD analytical house prices |
@@ -47,7 +48,8 @@ Many series start after 2004 for individual countries (for example EU-SILC from 
 
 ### Important gaps
 
-- **House prices:** no comparable official index exists in these databases for Albania, Bosnia and Herzegovina, Kosovo or Montenegro. Serbia and North Macedonia are covered via the BIS.
+- **House prices:** Albania comes from the Bank of Albania's half-yearly survey index (2013, 2015–2025; not harmonised with Eurostat). Serbia and North Macedonia are covered via the BIS. No official index exists for Bosnia and Herzegovina, Kosovo or Montenegro.
+- **Prices in euros per m²** are not official statistics: they come from the Deloitte Property Index (mostly asking prices for new homes) and Monstat for Montenegro, for 2024–2025 only. Kosovo, North Macedonia, Bulgaria, the Baltic states, Sweden, Switzerland and others are not covered.
 - **Price-to-income ratios** are OECD-only: no Western Balkan country, Cyprus, Malta, Türkiye, Ukraine, Moldova or Belarus.
 - **Bosnia and Herzegovina** is missing from EU-SILC and HICP; **Ukraine, Moldova and Belarus** have only World Bank inflation and GDP.
 - **Purchasing power parities** end in 2024 (published with a lag).
@@ -74,6 +76,8 @@ npm run data:geo       # rebuild map boundaries → public/data/europe.topo.json
 
 - `scripts/config/countries.mjs` — country list, codes per source, regions and groupings.
 - `scripts/config/indicators.mjs` — indicator definitions, plain-English explanations, sources in priority order and caveats.
+- `scripts/sources/home-prices-m2.csv` — prices per m² transcribed from the Deloitte Property Index (PDF, published yearly in autumn) and Monstat's quarterly tables, with the basis of every figure. Update it by hand when a new edition appears.
+- `scripts/sources/albania-hpi.csv` — the Bank of Albania's half-yearly house price index. The pipeline downloads the latest survey spreadsheet automatically, checks it against this file, and falls back to it if the bank's site is unavailable. Refresh the file when a new half-year is published.
 - `scripts/fetch-data.mjs` — downloads and harmonises the data (Eurostat JSON-stat, OECD SDMX, BIS SDMX, World Bank API). No API keys are needed.
 - `scripts/validate-data.mjs` — checks unique country-years, year ranges, numeric values, plausible ranges, minimum coverage, recency, source attribution and map geometry.
 - `scripts/build-geo.mjs` — builds simplified TopoJSON from Natural Earth (EU point-of-view edition) with mapshaper.

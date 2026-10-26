@@ -58,6 +58,48 @@ export function previousObs(series: Obs[] | undefined, year: number): Obs | unde
   return prev;
 }
 
+/** Observation at `year`, or the latest one before it. */
+export function obsAtOrBefore(series: Obs[] | undefined | null, year: number): Obs | undefined {
+  if (!series) return undefined;
+  let r: Obs | undefined;
+  for (const o of series) if (o[0] <= year) r = o;
+  return r;
+}
+
+/** The value a map or ranking should show: exact year, or for snapshot indicators the latest up to it. */
+export function displayObs(ind: Indicator, id: string, year: number): Obs | undefined {
+  return ind.snapshot ? obsAtOrBefore(ind.series[id], year) : obsAt(ind.series[id], year);
+}
+
+export const PRICE_BASIS: Record<string, string> = {
+  new_ask: 'Asking price, new homes',
+  new_tx: 'Sale price, new homes',
+  all_ask: 'Asking price, new and older homes',
+  old_ask: 'Asking price, older homes',
+  new_official: 'Official sale price, new homes',
+};
+
+export const TYPICAL_HOME_M2 = 70;
+
+/** What a typical 70 m² home costs and how many years of median income that is. */
+export function homeCost(data: Dataset, id: string, year: number) {
+  const pm = data.indicators.find((i) => i.id === 'price_m2');
+  const inc = data.indicators.find((i) => i.id === 'median_income_eur');
+  const p = pm ? obsAtOrBefore(pm.series[id], year) : undefined;
+  if (!p) return undefined;
+  // Only pair price and income when the income is at most two years older (UK survey data end in 2018).
+  const found = inc ? obsAtOrBefore(inc.series[id], Math.max(year, p[0])) : undefined;
+  const i = found && p[0] - found[0] <= 2 ? found : undefined;
+  const price = p[1] * TYPICAL_HOME_M2;
+  return { perM2: p[1], year: p[0], price, years: i ? price / i[1] : undefined, incomeYear: i?.[0], basis: pm?.extra?.[id]?.basis };
+}
+
+/** Round a euro amount for plain-language display (e.g. €120,400 → "€120,000"). */
+export function fmtEuroRound(v: number): string {
+  const step = v >= 100000 ? 5000 : 1000;
+  return `€${(Math.round(v / step) * step).toLocaleString('en-GB')}`;
+}
+
 export function seriesFor(ind: Indicator, id: string): Obs[] | undefined {
   if (id === 'EU27' || id === 'EA') return ind.benchmarkId === id ? ind.benchmarkSeries ?? undefined : undefined;
   return ind.series[id];
@@ -73,7 +115,7 @@ export function defaultYear(ind: Indicator): number {
 }
 
 export function coverageAt(ind: Indicator, year: number, ids: string[]): number {
-  return ids.filter((id) => valueAt(ind, id, year) !== undefined).length;
+  return ids.filter((id) => displayObs(ind, id, year) !== undefined).length;
 }
 
 /**

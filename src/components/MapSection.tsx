@@ -7,7 +7,7 @@ import CountryPanel from './CountryPanel';
 import { IndicatorSelect } from './FilterBar';
 import Info from './Info';
 
-const QUICK = ['hpi_growth', 'hpi', 'rent_growth', 'rent_index', 'pti', 'overburden', 'inflation', 'aic_pps'];
+const QUICK = ['price_m2', 'hpi_growth', 'hpi', 'rent_growth', 'rent_index', 'pti', 'overburden', 'inflation', 'aic_pps'];
 
 export default function MapSection() {
   const { data, filters, set, indicator } = useApp();
@@ -97,6 +97,8 @@ export default function MapSection() {
             <p className="map-note">
               {covered} of {ids.length} countries have data for {filters.year}. Hatched countries have no comparable data — they are not low values.
               {isIndex ? ` An index shows change since ${indicator.indexBase}, not which country is more expensive.` : ''}
+              {indicator.snapshot ? ' Countries without a figure for the chosen year show their latest earlier one, marked in the tooltip.' : ''}
+              {indicator.id === 'price_m2' ? ' Prices per m² are compiled by Deloitte from national sources (Montenegro: Monstat) — they are not official, harmonised statistics.' : ''}
               {indicator.stale && indicator.retrievedAt ? ` The source was unavailable at the last refresh; values were retrieved on ${new Date(indicator.retrievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
               {last < data.lastYear ? ` Annual data end in ${last}; 2026 readings appear in the country panel where published.` : ''}
             </p>

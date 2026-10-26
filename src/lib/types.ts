@@ -62,6 +62,10 @@ export interface Indicator {
   benchmarkSeries: Obs[] | null;
   latest: Record<string, LatestObs> | null;
   latestBenchmark: LatestObs | null;
+  /** Single-year snapshot: maps and rankings show each country's latest value up to the chosen year. */
+  snapshot?: boolean;
+  /** Per-country notes, e.g. the price basis for prices per m². */
+  extra?: Record<string, { basis?: string; change?: number; note?: string }>;
   retrievedAt?: string;
   /** True when the source was unreachable at the last refresh and older values are kept. */
   stale?: boolean;

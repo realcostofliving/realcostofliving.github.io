@@ -61,6 +61,8 @@ for (const ind of data.indicators) {
   if (ind.benchmarkId && !ind.benchmarkSeries) fail(`${tag} declares benchmark but has none`);
   if (ind.benchmarkSeries) checkSeries('benchmark', ind.benchmarkSeries);
 
+  if (ind.id === 'price_m2') for (const [cid, s] of Object.entries(ind.series)) for (const [y, v] of s) if (v < 300 || v > 20000) fail(`${tag} ${cid}: implausible price ${v} €/m² in ${y}`);
+
   const n = Object.keys(ind.series).length;
   if (CORE[ind.id] && n < CORE[ind.id]) fail(`${tag} only ${n} countries (expected ≥ ${CORE[ind.id]}) — source may have changed`);
   if (ind.coverage.last < new Date().getFullYear() - 3) fail(`${tag} latest year ${ind.coverage.last} is stale`);

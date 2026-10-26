@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../lib/state';
-import { defaultYear, describeFlag, fmt, fmtSigned, fmtValue, inRegion, obsAt, transform } from '../lib/data';
+import { defaultYear, describeFlag, fmt, fmtEuroRound, fmtSigned, fmtValue, homeCost, inRegion, obsAt, PRICE_BASIS, transform, TYPICAL_HOME_M2 } from '../lib/data';
 import { SERIES } from '../lib/scales';
 import type { Indicator } from '../lib/types';
 import EChart, { axisCommon, baseOption, INK, INK_3 } from './EChart';
@@ -29,6 +29,7 @@ export default function Affordability() {
       <div className="explainers">
         {METRICS.map((m) => <Explainer key={m.id} {...m} />)}
       </div>
+      <HomePrices />
       <p className="callout callout-accent">
         <strong>An index is not a price.</strong> If Hungary's house price index is far higher than Italy's, that does not mean homes cost more in Hungary. It means
         prices in Hungary have risen further since 2015. Official, comparable prices per square metre do not exist for most of Europe.
@@ -39,6 +40,67 @@ export default function Affordability() {
         <PriceVsWealth />
       </div>
     </section>
+  );
+}
+
+function HomePrices() {
+  const { data, filters, countryName, selectCountry, ind } = useApp();
+  const pm = ind('price_m2');
+  const year = Math.min(filters.year, pm.coverage.last);
+  const selected = new Map(filters.countries.map((id, i) => [id, SERIES[i]]));
+  const rows = data.countries
+    .filter((c) => inRegion(c, filters.region))
+    .map((c) => ({ id: c.id, h: homeCost(data, c.id, year) }))
+    .filter((r): r is { id: string; h: NonNullable<ReturnType<typeof homeCost>> } => !!r.h);
+  const byPrice = [...rows].sort((a, b) => b.h.price - a.h.price);
+  const byYears = rows.filter((r) => r.h.years !== undefined).sort((a, b) => b.h.years! - a.h.years!);
+  const color = (id: string) => selected.get(id) ?? (data.countries.find((c) => c.id === id)?.wb ? '#e0a48c' : '#a9bcd2');
+  const name = (r: { id: string; h: { year: number } }) => `${countryName(r.id)}${r.h.year !== year ? ` (${r.h.year})` : ''}`;
+  const tip = (r: (typeof rows)[number]) =>
+    `<b>${countryName(r.id)}</b>, ${r.h.year}<br/>${TYPICAL_HOME_M2} m² home: <b>about ${fmtEuroRound(r.h.price)}</b><br/>€${Math.round(r.h.perM2).toLocaleString('en-GB')} per m² · ${PRICE_BASIS[r.h.basis ?? ''] ?? ''}` +
+    (r.h.years !== undefined ? `<br/>≈ ${fmt(r.h.years, 1)} years of median disposable income (${r.h.incomeYear})` : '');
+  const bar = (list: typeof rows, value: (r: (typeof rows)[number]) => number, label: (v: number) => string): any => ({
+    ...baseOption(),
+    grid: { left: 4, right: 70, top: 4, bottom: 4, containLabel: true },
+    tooltip: { ...(baseOption().tooltip as object), formatter: (p: any) => tip(list[p.dataIndex]) },
+    xAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => (v >= 1000 ? `${v / 1000}k` : String(v)) } },
+    yAxis: { type: 'category', inverse: true, data: list.map(name), ...axisCommon, splitLine: { show: false }, axisLabel: { ...axisCommon.axisLabel, color: INK, fontSize: 11 } },
+    series: [{
+      type: 'bar',
+      barMaxWidth: 13,
+      data: list.map((r) => ({ value: value(r), itemStyle: { color: color(r.id), borderRadius: [0, 3, 3, 0] } })),
+      label: { show: true, position: 'right', color: INK_3, fontSize: 10, formatter: (p: any) => label(p.value) },
+    }],
+  });
+  const h = Math.max(260, rows.length * 19 + 30);
+  return (
+    <div className="home-prices">
+      <div className="card chart-card">
+        <div className="chart-head">
+          <div>
+            <h3 className="chart-title">What a {TYPICAL_HOME_M2} m² home costs, {year}</h3>
+            <p className="chart-unit">€, average price per m² × {TYPICAL_HOME_M2} · Deloitte Property Index; Montenegro: Monstat</p>
+          </div>
+        </div>
+        <EChart option={bar(byPrice, (r) => Math.round(r.h.price), (v) => fmtEuroRound(v))} height={h} ariaLabel={`Price of a ${TYPICAL_HOME_M2} square metre home by country`} onClick={(p) => byPrice[p.dataIndex] && selectCountry(byPrice[p.dataIndex].id)} />
+      </div>
+      <div className="card chart-card">
+        <div className="chart-head">
+          <div>
+            <h3 className="chart-title">How many years of income is that?</h3>
+            <p className="chart-unit">Price of a {TYPICAL_HOME_M2} m² home ÷ median disposable income per person (EU-SILC)</p>
+          </div>
+        </div>
+        <EChart option={bar(byYears, (r) => +r.h.years!.toFixed(1), (v) => `${fmt(v, 1)} yrs`)} height={h} ariaLabel="Years of median income needed for a home, by country" onClick={(p) => byYears[p.dataIndex] && selectCountry(byYears[p.dataIndex].id)} />
+      </div>
+      <p className="caption home-caption">
+        <strong>Real prices, read with care.</strong> These are average prices per square metre — mostly asking prices for new homes — collected by Deloitte’s
+        national offices from national sources, not official harmonised statistics; Montenegro uses its statistics office. Capitals and coasts cost far more than the national average
+        (Tirana is about €2,100/m² against €1,720 for Albania). “Years of income” divides the price by the median person’s yearly disposable income after tax and
+        benefits (a couple earns roughly 1.5 times that), so it shows how hard buying is, ignoring savings, mortgages and interest. Countries in brackets only have a 2024 price.
+        {rows.length < data.countries.filter((c) => inRegion(c, filters.region)).length ? ` Covers ${rows.length} of ${data.countries.filter((c) => inRegion(c, filters.region)).length} countries in this region.` : ''}
+      </p>
+    </div>
   );
 }
 

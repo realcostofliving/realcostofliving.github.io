@@ -1,11 +1,11 @@
 import { useApp, MAX_COUNTRIES } from '../lib/state';
-import { describeFlag, fmtSigned, fmtValue, inRegion, obsAt, periodLabel } from '../lib/data';
+import { describeFlag, displayObs, fmt, fmtEuroRound, fmtSigned, fmtValue, homeCost, inRegion, obsAt, periodLabel, TYPICAL_HOME_M2 } from '../lib/data';
 import { colorScale } from '../lib/scales';
 import type { Indicator } from '../lib/types';
 import Flag from './Flag';
 import Sparkline from './Sparkline';
 
-const PROFILE = ['hpi_growth', 'rent_growth', 'inflation', 'overburden', 'housing_cost_share', 'pti', 'pli', 'aic_pps', 'median_income_pps'];
+const PROFILE = ['price_m2', 'hpi_growth', 'rent_growth', 'inflation', 'overburden', 'housing_cost_share', 'pti', 'pli', 'aic_pps', 'median_income_pps'];
 const LATEST = ['hpi_growth', 'rent_growth', 'inflation', 'food_inflation', 'energy_inflation'];
 const REGION_NAMES = { N: 'Northern Europe', W: 'Western Europe', S: 'Southern Europe', E: 'Eastern Europe' };
 
@@ -18,7 +18,7 @@ function Leaderboard() {
   const { data, filters, indicator, selectCountry, countryName } = useApp();
   const rows = data.countries
     .filter((c) => inRegion(c, filters.region))
-    .map((c) => ({ id: c.id, v: obsAt(indicator.series[c.id], filters.year)?.[1] }))
+    .map((c) => ({ id: c.id, v: displayObs(indicator, c.id, filters.year)?.[1] }))
     .filter((r): r is { id: string; v: number } => r.v !== undefined)
     .sort((a, b) => b.v - a.v);
   const scale = colorScale(indicator);
@@ -74,6 +74,7 @@ function Profile({ id }: { id: string }) {
         </div>
         <button className="close" onClick={() => set({ focus: null })} aria-label="Close country profile">×</button>
       </div>
+      <HomeCost id={id} />
       <ul className="profile-list">
         {PROFILE.map((k) => <ProfileRow key={k} ind={ind(k)} id={id} />)}
       </ul>
@@ -106,6 +107,22 @@ function Profile({ id }: { id: string }) {
           {c.name} vs EU-27
         </button>
       </div>
+    </div>
+  );
+}
+
+function HomeCost({ id }: { id: string }) {
+  const { data, filters } = useApp();
+  const h = homeCost(data, id, filters.year);
+  if (!h) return <p className="home-card muted small">No comparable price per m² is available for this country.</p>;
+  return (
+    <div className="home-card">
+      <p className="eyebrow">What a home costs · {h.year}</p>
+      <p className="home-price">{fmtEuroRound(h.price)}</p>
+      <p className="small">
+        for a {TYPICAL_HOME_M2} m² home at about €{Math.round(h.perM2).toLocaleString('en-GB')} per m²
+        {h.years !== undefined && <> — roughly <strong>{fmt(h.years, 1)} years</strong> of a typical person’s disposable income</>}.
+      </p>
     </div>
   );
 }

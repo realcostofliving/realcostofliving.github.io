@@ -9,7 +9,9 @@
 //  - If a source is temporarily unavailable, the indicators that depend on it keep the
 //    values from the previous snapshot, marked `stale` with their original retrieval date.
 //  - Only derived values: BIS quarterly indices -> annual averages (all four quarters
-//    required), rebased to 2015 = 100, and year-on-year growth from those averages.
+//    required), rebased to 2015 = 100, and year-on-year growth from those averages; the
+//    same for the Bank of Albania's half-yearly index (both halves required); and the
+//    annual mean of Monstat's four quarterly prices per m2 for Montenegro.
 
 import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -18,6 +20,7 @@ import { COUNTRIES, REGIONS, EXCLUDED, AGGREGATES } from './config/countries.mjs
 import { INDICATORS, SOURCE_INFO, BIS_HPI } from './config/indicators.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const SOURCES_DIR = resolve(ROOT, 'scripts/sources');
 const OUT = resolve(ROOT, 'public/data/data.json');
 const FIRST_YEAR = 2004;
 const LAST_YEAR = 2026;
@@ -238,6 +241,91 @@ async function loadWorldBank(src) {
   return { series, benchmark: benchmark.length ? benchmark : null, benchmarkId: 'EU27', sourceKey: src.src };
 }
 
+// ---- Bank of Albania: half-yearly Fischer house price index (survey of sales by
+// construction firms and estate agents, 2013 = 1). The bank publishes it only inside an
+// Excel file attached to its real-estate survey page, whose name changes every release,
+// so we look the link up and parse it; if anything fails we use the committed copy in
+// scripts/sources/albania-hpi.csv (extracted from the same official file).
+const BOA_PAGE = 'https://www.bankofalbania.org/Stabiliteti_Financiar/Analiza_dhe_studime/Vrojtime/Vrojtim_mbi_Ecuria_e_Tregut_te_Pasurive_te_Paluajtshme_ne_Shqiperi.html';
+let boaRaw = null;
+async function boaHalfYears() {
+  if (boaRaw) return boaRaw;
+  const fromCsv = async () => parseCsv(await readFile(resolve(SOURCES_DIR, 'albania-hpi.csv'), 'utf8')).map((r) => ({ p: r.period, v: Number(r.albania_index_2013_eq_1) }));
+  let rows;
+  try {
+    const page = await getText(BOA_PAGE, 2);
+    const links = [...page.matchAll(/href="([^"]*Tabelat_e_vrojtimit_6M_(I|II)_(\d{4})[^"]*\.xlsx)"/gi)]
+      .map((m) => ({ url: new URL(m[1], BOA_PAGE).href, key: +m[3] * 10 + (m[2].toUpperCase() === 'II' ? 2 : 1) }))
+      .sort((a, b) => b.key - a.key);
+    if (!links.length) throw new Error('no survey table link found');
+    const res = await fetch(links[0].url, { headers: { 'User-Agent': 'Mozilla/5.0 (europe-cost-of-living data pipeline)' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const XLSX = (await import('xlsx')).default ?? (await import('xlsx'));
+    const wb = XLSX.read(new Uint8Array(await res.arrayBuffer()), { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames.find((n) => /sasior/i.test(n))];
+    const grid = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, raw: true });
+    // Find the column whose header names the national ("në rang vendi") price index.
+    let col = -1;
+    for (const r of grid) { const i = r.findIndex((c) => typeof c === 'string' && /Indeksi i .mimit t. Banesave n. rang vendi/i.test(c)); if (i >= 0) { col = i; break; } }
+    if (col < 1) throw new Error('index column not found');
+    const norm = (lab) => {
+      const s = String(lab);
+      let m = s.match(/^6M(I|II)_(\d{4})$/i); if (m) return `${m[2]}-H${m[1].toUpperCase() === 'II' ? 2 : 1}`;
+      m = s.match(/^T(I|II|III|IV)_(\d{4})$/i); if (m) return `${m[2]}-Q${['I', 'II', 'III', 'IV'].indexOf(m[1].toUpperCase()) + 1}`;
+      return /^\d{4}$/.test(s) ? s : null;
+    };
+    rows = grid.map((r) => ({ p: norm(r[col - 1]), v: Number(r[col]) })).filter((r) => r.p && Number.isFinite(r.v));
+    const csv = await fromCsv();
+    // Sanity check: the new file must agree with the committed history it overlaps.
+    for (const o of csv) { const n = rows.find((r) => r.p === o.p); if (n && Math.abs(n.v / o.v - 1) > 0.02) throw new Error(`revision check failed for ${o.p}`); }
+    if (rows.length < csv.length) throw new Error('fewer periods than the committed copy');
+    datasetUpdated.boa_rre = new Date().toISOString();
+  } catch (err) {
+    console.warn(`
+  Bank of Albania table unavailable (${err.message}); using scripts/sources/albania-hpi.csv`);
+    rows = await fromCsv();
+    datasetUpdated.boa_rre ??= null;
+  }
+  boaRaw = rows;
+  return rows;
+}
+
+async function loadBoa(mode) {
+  const rows = await boaHalfYears();
+  const years = new Map();
+  for (const r of rows) {
+    const m = r.p.match(/^(\d{4})-H([12])$/);
+    if (m) { if (!years.has(+m[1])) years.set(+m[1], []); years.get(+m[1]).push(r.v); }
+    else if (/^\d{4}$/.test(r.p)) years.set(+r.p, [r.v, r.v]); // 2013: annual base value
+  }
+  const annual = new Map([...years].filter(([, v]) => v.length === 2).map(([y, v]) => [y, (v[0] + v[1]) / 2]));
+  const base = annual.get(2015);
+  const out = [];
+  for (const [y, v] of [...annual].sort((a, b) => a[0] - b[0])) {
+    if (mode === 'index') out.push([y, round((v / base) * 100, 1), 'd']);
+    else if (annual.has(y - 1)) out.push([y, round((v / annual.get(y - 1) - 1) * 100, 1), 'd']);
+  }
+  return { series: new Map([['AL', out]]), benchmark: null, sourceKey: 'boa_rre', derived: true };
+}
+
+// ---- Prices per m2: curated table (scripts/sources/home-prices-m2.csv). These figures are
+// published only in PDF reports (Deloitte Property Index) or quarterly spreadsheets
+// (Monstat), so they are transcribed with their source and basis for every row.
+async function loadPricesM2() {
+  const rows = parseCsv(await readFile(resolve(SOURCES_DIR, 'home-prices-m2.csv'), 'utf8'));
+  const series = new Map(), sourceOf = new Map(), extra = {};
+  for (const r of rows) {
+    const id = byIso2.get(r.country);
+    if (!id) throw new Error(`home-prices-m2.csv: unknown country ${r.country}`);
+    const flag = r.basis === 'new_ask' || r.basis === 'new_official' ? undefined : 'd';
+    series.set(id, [[+r.year, Number(r.eur_m2), flag]]);
+    sourceOf.set(id, r.source);
+    extra[id] = { basis: r.basis, ...(r.reported_change_pct ? { change: Number(r.reported_change_pct) } : {}), ...(r.note ? { note: r.note } : {}) };
+  }
+  for (const k of ['deloitte_pi', 'deloitte_pi_2025', 'monstat_dw']) datasetUpdated[k] = SOURCE_INFO[k].published;
+  return { series, sourceOf, extra, benchmark: null, sourceKey: 'deloitte_pi' };
+}
+
 function loader(src) {
   switch (src.type) {
     case 'eurostat': return loadEurostatAnnual(src);
@@ -247,6 +335,9 @@ function loader(src) {
     case 'worldbank': return loadWorldBank(src);
     case 'eurostat-latest': return loadEurostatLatest(src);
     case 'bis-latest': return loadBisLatest(src);
+    case 'boa-index': return loadBoa('index');
+    case 'boa-growth': return loadBoa('growth');
+    case 'prices-m2': return loadPricesM2();
     default: throw new Error(`Unknown source type ${src.type}`);
   }
 }
@@ -287,6 +378,7 @@ async function buildIndicator(ind, now) {
     const series = {}, countrySource = {};
     let benchmark = null, benchmarkId = ind.benchmark, benchmarkSource = null;
     const usedSources = new Set();
+    let extra;
     for (const src of ind.sources) {
       const res = await loader(src);
       if (!benchmark && res.benchmark) { benchmark = res.benchmark; benchmarkId = res.benchmarkId; benchmarkSource = res.sourceKey; usedSources.add(res.sourceKey); }
@@ -294,9 +386,11 @@ async function buildIndicator(ind, now) {
         if (series[id] || !allowed(src, id) || !s.length) continue;
         if (src.minLastYear && s[s.length - 1][0] < src.minLastYear) continue;
         series[id] = s.map((o) => (o[2] ? o : o.slice(0, 2)));
-        countrySource[id] = res.derived ? { s: res.sourceKey, d: 1 } : { s: res.sourceKey };
-        usedSources.add(res.sourceKey);
+        const key = res.sourceOf?.get(id) ?? res.sourceKey;
+        countrySource[id] = res.derived ? { s: key, d: 1 } : { s: key };
+        usedSources.add(key);
       }
+      if (res.extra) extra = { ...extra, ...res.extra };
     }
     let latest = null, latestBenchmark = null;
     if (ind.latest) {
@@ -329,6 +423,7 @@ async function buildIndicator(ind, now) {
       benchmarkSeries: benchmark ? benchmark.map((o) => (o[2] ? o : o.slice(0, 2))) : null,
       latest,
       latestBenchmark,
+      ...(extra ? { extra } : {}),
     };
     console.log(`${Object.keys(series).length} countries, ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'no data'}${latest ? `, latest for ${Object.keys(latest).length}` : ''}`);
     return built;

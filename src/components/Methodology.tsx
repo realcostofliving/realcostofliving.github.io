@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useApp } from '../lib/state';
-import { FLAG_LABELS } from '../lib/data';
+import { FLAG_LABELS, PRICE_BASIS } from '../lib/data';
 import type { Indicator } from '../lib/types';
 import Flag from './Flag';
 
@@ -101,6 +101,9 @@ export default function Methodology() {
             <ul>
               <li>BIS house price indices (United Kingdom, Greece, Switzerland, Serbia, North Macedonia): annual average of the four quarters (a year is used only if all four quarters exist), rebased to 2015 = 100; yearly growth is computed from those annual averages.</li>
               <li>Latest BIS reading: change between the latest quarter and the same quarter a year earlier.</li>
+              <li>Albania's house price index: the Bank of Albania publishes a half-yearly Fischer index (2013 = 1) from its real-estate survey. We average the two halves of each year (both required), rebase to 2015 = 100 and compute yearly growth from those averages. 2014 is missing because the survey was quarterly that year and only three quarters exist.</li>
+              <li>Montenegro's price per m²: mean of Monstat's four 2025 quarterly averages for new dwellings sold by enterprises at market prices.</li>
+              <li>"What a home costs": price per m² × 70 m², and that amount divided by median equivalised disposable income (EU-SILC, same or latest earlier year). This is the only calculation that combines two different datasets; it is labelled wherever it appears.</li>
               <li>Chart views: "Yearly change" uses only consecutive years; "Change since" and "Indexed" need an observation in the base year, otherwise the country is left out and a note says so.</li>
               <li>"Did incomes keep up?" compares each index with its own value in the base year. No cross-dataset ratio (such as a rent-to-income ratio) is calculated.</li>
             </ul>
@@ -114,7 +117,8 @@ export default function Methodology() {
       <section id="limitations" className="method-section">
         <h2>Known limitations</h2>
         <ul className="limits">
-          <li><strong>House prices in the Western Balkans.</strong> There is no comparable official house price index for Albania, Bosnia and Herzegovina, Kosovo or Montenegro in the international databases used here. Serbia and North Macedonia are covered through the BIS. Some national banks publish their own indices, but their methods are not harmonised, so we leave them out rather than mix incompatible series.</li>
+          <li><strong>House prices in the Western Balkans.</strong> Serbia and North Macedonia are covered through the BIS. Albania uses the Bank of Albania's own survey-based index, which is not harmonised with Eurostat's and is flagged "definition differs"; it measures prices of homes sold by construction firms and agents, and can move very differently from asking prices (in 2025 it rose about 34%, while Deloitte reports asking prices up about 6%). No official index exists for Bosnia and Herzegovina, Kosovo or Montenegro.</li>
+          <li><strong>Prices per m²</strong> are not official statistics: Europe has no harmonised source of house prices in euros. We use the Deloitte Property Index (figures collected by Deloitte national offices from national sources and market data) and Monstat for Montenegro. Most are asking prices for new homes; some are transaction prices or include older homes, and national averages hide large differences between cities, coasts and rural areas. Only 2024–2025 are available, and Kosovo, North Macedonia and 12 other countries are not covered.</li>
           <li><strong>Price-to-income ratios</strong> are published by the OECD only, for OECD members and a few partners. No Western Balkan country, Cyprus, Malta or Türkiye is covered. They are indices (2015 = 100), not absolute ratios of house prices to annual income.</li>
           <li><strong>EU-SILC measures</strong> (overburden rate, housing cost share, median income) start later in candidate countries, have breaks in series, and are not available for Bosnia and Herzegovina, Ukraine, Moldova or Belarus. The UK series end in 2018. Income refers to the year before the survey.</li>
           <li><strong>Rents</strong> come from consumer price indices, which follow rents paid by sitting tenants rather than advertised rents for new lets, and cover small rental markets in countries where most people own their homes.</li>
@@ -191,6 +195,20 @@ function IndicatorMeta({ ind }: { ind: Indicator }) {
           <>
             <dt>Source by country</dt>
             <dd>{[...bySource].map(([k, list]) => <p key={k}><code>{k}</code>: {list.join(', ')}</p>)}</dd>
+          </>
+        )}
+        {ind.extra && (
+          <>
+            <dt>Basis by country</dt>
+            <dd>
+              {Object.entries(
+                Object.entries(ind.extra).reduce<Record<string, string[]>>((acc, [id, e]) => {
+                  const k = PRICE_BASIS[e.basis ?? ''] ?? e.basis ?? '—';
+                  (acc[k] ??= []).push(countryName(id));
+                  return acc;
+                }, {}),
+              ).map(([k, list]) => <p key={k}><strong>{k}:</strong> {list.join(', ')}</p>)}
+            </dd>
           </>
         )}
         <dt>Benchmark</dt><dd>{ind.benchmarkId === 'EU27' ? 'EU-27, official aggregate' : ind.benchmarkId === 'EA' ? 'Euro area, OECD aggregate (no EU aggregate published)' : 'None'}</dd>

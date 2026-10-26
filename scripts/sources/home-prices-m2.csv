@@ -1,0 +1,28 @@
+country,year,eur_m2,basis,reported_change_pct,source,note
+LU,2025,9160,new_ask,4.57,deloitte_pi,
+CZ,2025,5412,new_ask,7.59,deloitte_pi,
+DE,2025,5200,new_ask,8.33,deloitte_pi,
+AT,2025,5199,new_ask,2.90,deloitte_pi,
+NL,2025,5186,new_tx,5.49,deloitte_pi,
+FI,2025,4962,new_ask,1.49,deloitte_pi,
+PT,2025,4946,new_ask,2.85,deloitte_pi,
+NO,2025,4134,new_ask,0.60,deloitte_pi,
+ES,2025,4071,new_ask,8.88,deloitte_pi,
+IE,2025,3860,new_tx,3.37,deloitte_pi,
+SK,2025,3656,new_ask,12.46,deloitte_pi,
+HU,2025,3438,new_ask,10.89,deloitte_pi,
+BE,2025,3269,new_ask,0.67,deloitte_pi,
+PL,2025,3008,new_ask,7.76,deloitte_pi,
+GB,2025,2912,new_tx,3.51,deloitte_pi,
+HR,2025,2861,new_ask,14.26,deloitte_pi,
+IT,2025,2734,new_ask,-0.25,deloitte_pi,
+GR,2025,1931,new_ask,7.80,deloitte_pi,
+RO,2025,1917,all_ask,14.38,deloitte_pi,
+AL,2025,1720,all_ask,6.17,deloitte_pi,Tirana about EUR 2100/m2 (Deloitte Albania)
+RS,2025,1706,new_ask,-2.51,deloitte_pi,
+TR,2025,864,new_ask,-8.99,deloitte_pi,Fall in euros mostly reflects the weaker lira
+ME,2025,2251,new_official,,monstat_dw,Average of the four 2025 quarters (Q1 2161 / Q2 2201 / Q3 2228 / Q4 2415) for dwellings sold by enterprises at market prices
+SI,2024,3400,new_ask,,deloitte_pi_2025,Not in the 2026 edition; latest available is 2024
+FR,2024,3332,old_ask,,deloitte_pi_2025,Older dwellings; not in the 2026 edition
+DK,2024,3239,new_ask,,deloitte_pi_2025,Not in the 2026 edition; latest available is 2024
+BA,2024,1482,new_ask,,deloitte_pi_2025,Not in the 2026 edition; latest available is 2024

@@ -6,7 +6,7 @@ import 'd3-transition';
 import { feature } from 'topojson-client';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import { useApp } from '../lib/state';
-import { describeFlag, fmtSigned, fmtValue, inRegion, obsAt, previousObs, sourceName } from '../lib/data';
+import { describeFlag, displayObs, fmt, fmtEuroRound, fmtSigned, fmtValue, homeCost, inRegion, obsAt, PRICE_BASIS, previousObs, sourceName, TYPICAL_HOME_M2 } from '../lib/data';
 import { colorScale } from '../lib/scales';
 import Flag from './Flag';
 
@@ -15,6 +15,23 @@ type F = Feature<Geometry, { id: string; covered: number; name?: string }>;
 // Small states get a round hit target so they stay easy to click and tap.
 const MARKERS = ['MT', 'LU', 'CY', 'XK', 'ME'];
 const WB_IDS = ['AL', 'BA', 'XK', 'ME', 'MK', 'RS'];
+
+// Label anchors (lon, lat) where a shape's centroid falls awkwardly (coasts, islands, odd shapes).
+const LABEL_AT: Record<string, [number, number]> = {
+  HR: [16.2, 45.7], NO: [9.6, 61.6], GR: [22.0, 39.6], IT: [12.6, 42.9], GB: [-1.7, 52.8], SE: [15.2, 62.6], FI: [26.0, 62.6],
+  PT: [-8.1, 39.7], ES: [-3.6, 40.2], DK: [9.2, 56.1], NL: [5.6, 52.3], TR: [34.5, 39.0], AL: [20.05, 41.0], ME: [19.25, 42.75],
+  RS: [20.8, 44.1], BA: [17.8, 44.2], RO: [24.9, 45.9], HU: [19.4, 47.1], SK: [19.6, 48.7], CZ: [15.4, 49.8], AT: [14.4, 47.6],
+  DE: [10.3, 51.1], BE: [4.6, 50.6], LU: [6.1, 49.75], PL: [19.3, 52.1], IE: [-8.0, 53.2], SI: [14.8, 46.1], FR: [2.4, 46.6],
+  IS: [-18.6, 64.9], LT: [23.9, 55.3], LV: [25.6, 56.9], EE: [25.8, 58.7], BG: [25.3, 42.7], MK: [21.7, 41.6], XK: [20.9, 42.6],
+  UA: [31.4, 49.0], BY: [28.0, 53.5], MD: [28.5, 47.2], CH: [8.2, 46.8], CY: [33.2, 35.0], MT: [14.4, 35.9],
+};
+
+function labelText(ind: { id: string; kind: string; decimals: number; unitShort: string }, v: number): string {
+  if (ind.id === 'price_m2') return `€${Math.round(v).toLocaleString('en-GB')}`;
+  const u = ind.unitShort.trim() === '%' ? '%' : '';
+  const d = Math.abs(v) >= 100 ? 0 : ind.decimals;
+  return ind.kind === 'rate' ? fmtSigned(v, d, u) : fmt(v, d, u);
+}
 
 export default function EuropeMap() {
   const { data, topo, filters, indicator, selectCountry, set, countryName } = useApp();
@@ -25,6 +42,10 @@ export default function EuropeMap() {
   const [size, setSize] = useState({ w: 800, h: 640 });
   const [k, setK] = useState(1);
   const [hover, setHover] = useState<{ id: string; x: number; y: number } | null>(null);
+  // Values written on the map: on by default for real prices, otherwise on request.
+  const [labelPref, setLabelPref] = useState<boolean | null>(null);
+  useEffect(() => setLabelPref(null), [indicator.id]);
+  const showLabels = labelPref ?? indicator.id === 'price_m2';
 
   useEffect(() => {
     if (!wrap.current) return;
@@ -44,7 +65,7 @@ export default function EuropeMap() {
     return { projection, path: geoPath(projection) };
   }, [features, size]);
 
-  const shapes = useMemo(() => features.map((f) => ({ f, d: path(f) ?? '', c: path.centroid(f) })), [features, path]);
+  const shapes = useMemo(() => features.map((f) => ({ f, d: path(f) ?? '', c: path.centroid(f), a: path.area(f) })), [features, path]);
 
   // Zoom & pan
   useEffect(() => {
@@ -78,7 +99,7 @@ export default function EuropeMap() {
 
   const scale = colorScale(indicator);
   const year = filters.year;
-  const valueOf = (id: string) => obsAt(indicator.series[id], year)?.[1];
+  const valueOf = (id: string) => displayObs(indicator, id, year)?.[1];
   const regionIds = new Set(data.countries.filter((c) => inRegion(c, filters.region)).map((c) => c.id));
 
   const onMove = (id: string, ev: React.MouseEvent) => {
@@ -151,6 +172,7 @@ export default function EuropeMap() {
               />
             );
           })}
+          {showLabels && <MapLabels shapes={shapes} projection={projection} k={k} valueOf={valueOf} regionIds={regionIds} />}
         </g>
       </svg>
       <div className="map-controls" role="group" aria-label="Map zoom">
@@ -158,6 +180,9 @@ export default function EuropeMap() {
         <button onClick={() => zoomBy(1 / 1.6)} aria-label="Zoom out">−</button>
         <button onClick={() => zoomTo(null)} aria-label="Reset zoom" className="txt">Europe</button>
         <button onClick={() => zoomTo(WB_IDS)} className="txt">Balkans</button>
+        <button onClick={() => setLabelPref(!showLabels)} className={`txt ${showLabels ? 'on' : ''}`} aria-pressed={showLabels}>
+          {showLabels ? 'Hide values' : 'Show values'}
+        </button>
         {filters.focus && <button onClick={() => set({ focus: null })} className="txt">Clear selection</button>}
       </div>
       <p className="map-hint">Drag to pan · Ctrl + scroll or buttons to zoom</p>
@@ -166,12 +191,44 @@ export default function EuropeMap() {
   );
 }
 
+function MapLabels({ shapes, projection, k, valueOf, regionIds }: { shapes: { f: F; c: [number, number]; a: number }[]; projection: (p: [number, number]) => [number, number] | null; k: number; valueOf: (id: string) => number | undefined; regionIds: Set<string> }) {
+  const { indicator, filters } = useApp();
+  const fs = 10.5 / k;
+  // Place labels greedily — selected country, then the Western Balkans, then by size — skipping overlaps.
+  const items = shapes
+    .filter(({ f }) => f.properties.covered && regionIds.has(f.properties.id) && valueOf(f.properties.id) !== undefined)
+    .map(({ f, c, a }) => {
+      const id = f.properties.id;
+      const at = LABEL_AT[id] ? projection(LABEL_AT[id]) : c;
+      const text = labelText(indicator, valueOf(id)!);
+      const rank = id === filters.focus ? 3e9 : WB_IDS.includes(id) ? 2e9 : a;
+      return { id, x: at?.[0] ?? c[0], y: at?.[1] ?? c[1], text, rank, w: text.length * fs * 0.64 + 6 / k, h: fs * 1.5 };
+    })
+    .sort((p, q) => q.rank - p.rank);
+  const placed: typeof items = [];
+  for (const it of items) {
+    if (placed.some((p) => Math.abs(p.x - it.x) < (p.w + it.w) / 2 && Math.abs(p.y - it.y) < (p.h + it.h) / 2)) continue;
+    placed.push(it);
+  }
+  return (
+    <g className="map-labels" aria-hidden="true" style={{ fontSize: fs }}>
+      {placed.map((p) => (
+        <text key={p.id} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" strokeWidth={3 / k}>
+          {p.text}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: number; h: number }) {
   const { data, filters, indicator, countryName } = useApp();
   const year = filters.year;
   const series = indicator.series[id];
-  const o = obsAt(series, year);
-  const prev = previousObs(series, year);
+  const o = displayObs(indicator, id, year);
+  const prev = indicator.snapshot ? undefined : previousObs(series, year);
+  const home = indicator.id === 'price_m2' ? homeCost(data, id, year) : undefined;
+  const extra = indicator.extra?.[id];
   const bench = indicator.benchmarkSeries ? obsAt(indicator.benchmarkSeries, year) : undefined;
   const last = series?.[series.length - 1];
   const flags = describeFlag(o?.[2]);
@@ -186,7 +243,7 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
       <div className="tt-head">
         <Flag id={id} size="md" /> <strong>{countryName(id)}</strong>
       </div>
-      <div className="tt-ind">{indicator.short} · {year}</div>
+      <div className="tt-ind">{indicator.short} · {o && o[0] !== year ? `${o[0]} (latest available)` : year}</div>
       {o ? (
         <div className="tt-value">
           {rate ? fmtSigned(o[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, o[1])}
@@ -198,7 +255,25 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
           <span className="tt-unit">{last ? `Latest available: ${fmtValue(indicator, last[1])} (${last[0]})` : 'Not covered by this source'}</span>
         </div>
       )}
+      {home && (
+        <div className="tt-home">
+          A {TYPICAL_HOME_M2} m² home: <strong>about {fmtEuroRound(home.price)}</strong>
+          {home.years !== undefined && <span>≈ {fmt(home.years, 1)} years of a typical person’s disposable income</span>}
+        </div>
+      )}
       <dl className="tt-rows">
+        {extra?.basis && (
+          <div>
+            <dt>Basis</dt>
+            <dd>{PRICE_BASIS[extra.basis] ?? extra.basis}</dd>
+          </div>
+        )}
+        {extra?.change !== undefined && (
+          <div>
+            <dt>Change vs {(o?.[0] ?? year) - 1}</dt>
+            <dd>{fmtSigned(extra.change, 1, '%')}</dd>
+          </div>
+        )}
         {o && prev && (
           <div>
             <dt>Change vs {prev[0]}{prev[0] !== year - 1 ? ' (gap)' : ''}</dt>
@@ -216,7 +291,8 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
           <dd><span className={`status status-${status.toLowerCase()}`}>{status}</span>{flags.filter((f) => f !== 'provisional' && f !== 'estimated').map((f) => ` · ${f}`)}</dd>
         </div>
       </dl>
-      {src && <div className="tt-src">{sourceName(data, src.s)}{src.d ? ' · derived' : ''}</div>}
+      {extra?.note && <div className="tt-note">{extra.note.replace('EUR ', '€').replace('/m2', '/m²')}</div>}
+      {src && <div className="tt-src">{sourceName(data, src.s)}{src.d ? ' · derived' : ''}{indicator.id === 'price_m2' && src.s.startsWith('deloitte') ? ' · not official statistics' : ''}</div>}
     </div>
   );
 }
