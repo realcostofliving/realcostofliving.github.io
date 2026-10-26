@@ -6,6 +6,8 @@ import Header from './components/Header';
 import FilterBar from './components/FilterBar';
 import KpiCards from './components/KpiCards';
 import MapSection from './components/MapSection';
+import StartHere from './components/StartHere';
+import CountryTable from './components/CountryTable';
 import TrendExplorer from './components/TrendExplorer';
 import Comparison from './components/Comparison';
 import Affordability from './components/Affordability';
@@ -126,8 +128,10 @@ function Loaded({ data, topo }: { data: Dataset; topo: any }) {
         <>
           <FilterBar />
           <main id="main" className="page">
+            <StartHere />
             <KpiCards />
             <MapSection />
+            <CountryTable />
             <TrendExplorer />
             <Comparison />
             <Affordability />

@@ -1,8 +1,10 @@
 import { useApp } from '../lib/state';
+import SearchPalette from './SearchPalette';
 
 const SECTIONS = [
   ['overview', 'Overview'],
   ['map', 'Map'],
+  ['table', 'Country table'],
   ['trends', 'Trends'],
   ['compare', 'Compare'],
   ['affordability', 'Affordability'],
@@ -22,6 +24,7 @@ export default function Header({ page }: { page: 'dashboard' | 'methodology' }) 
             <span className="wordmark-kicker">Europe</span>
             <span className="wordmark-title">The Real Cost of Living</span>
           </a>
+          {page === 'dashboard' && <SearchPalette />}
           <nav className="masthead-nav" aria-label="Pages">
             <a href={dashHref} aria-current={page === 'dashboard' ? 'page' : undefined}>Explorer</a>
             <a href="#/methodology" aria-current={page === 'methodology' ? 'page' : undefined}>Sources &amp; methods</a>

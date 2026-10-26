@@ -22,7 +22,7 @@ export default function KpiCards() {
     ? { kind: 'country', id: filters.focus, label: countryName(filters.focus) }
     : filters.region === 'EU'
       ? { kind: 'aggregate', id: 'EU27', label: 'EU-27 (official aggregate)' }
-      : { kind: 'median', id: 'median', label: `Median of countries in ${regionLabel === 'All European countries' ? 'Europe' : regionLabel}` };
+      : { kind: 'median', id: 'median', label: `The typical country in ${regionLabel === 'All European countries' ? 'Europe' : regionLabel}` };
 
   return (
     <section id="overview" className="section kpi-section" aria-labelledby="overview-title">
@@ -35,7 +35,7 @@ export default function KpiCards() {
         </div>
         <p className="kpi-note">
           {subject.kind === 'median'
-            ? 'No country selected: cards show the median of every country in the region with data for that year — not an official aggregate. Click a country on the map to see its figures.'
+            ? 'No country chosen yet, so these are middle values across all countries with data — not an official EU figure. Click a country on the map or search for one to see its own numbers.'
             : subject.kind === 'aggregate'
               ? 'Official EU-27 aggregate as published by the source. The price-to-income ratio has no EU aggregate, so the euro area is shown.'
               : 'Click another country on the map, or clear the selection to return to the regional view.'}

@@ -12,6 +12,9 @@ Every statistic comes from an official source (Eurostat, the OECD, the Bank for 
 
 | Section | What it shows |
 |---|---|
+| **Search** | A search button at the top (or press `/` or Ctrl+K) finds any country by name — including other spellings like “UK”, “Turkey” or “Kosova” — and opens its profile or adds it to the comparison. |
+| **Start here** | Plain-language questions that jump to the right section, four headline facts, and a four-term glossary (€ per m², index, EU = 100, missing data). |
+| **Country table** | All 41 countries in one searchable, sortable table: home price per m², cost of a 70 m² home, years of income, house price and rent changes, inflation, housing costs, housing stress, price level and median income. Tick up to five countries to compare, filter by region, download as CSV. |
 | **Overview** | Four KPI cards — house price growth, rent inflation, housing costs as a share of income, price-to-income ratio — for the selected country, the EU-27 aggregate, or the median of a region (clearly labelled), with sparklines, change on the previous year, the benchmark and the latest 2026 reading. |
 | **Map** | Choropleth of Europe for 28 indicators — starting with real home prices in € per m², written on each country — a year slider with a play button, zoom to the Balkans, keyboard-accessible countries, rich tooltips (value, unit, change since the previous available year, benchmark, data status, source) and a distinct pattern for missing data. |
 | **Country panel** | Click a country for a profile with nine key measures, sparklines and 2026 partial-year readings; or see a live ranking when nothing is selected. |
