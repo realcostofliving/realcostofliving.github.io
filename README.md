@@ -1,136 +1,117 @@
 # Europe: The Real Cost of Living
 
-**Explore housing costs, affordability, income, and living standards across Europe.**
+**See what homes, rents and everyday life really cost across Europe, and whether pay is keeping up.**
 
-An interactive, public-interest data explorer covering 41 European countries — all 27 EU member states, the six Western Balkan countries (Albania, Bosnia and Herzegovina, Kosovo, Montenegro, North Macedonia, Serbia), and the United Kingdom, Norway, Switzerland, Iceland, Türkiye, Ukraine, Moldova and Belarus — from 2004 to 2025, with the latest 2026 readings where they have been published.
+👉 **Open the site:** https://kevin19e.github.io/europe-cost-of-living/
 
-**Live site:** https://kevin19e.github.io/europe-cost-of-living/
+I built this because I wanted one honest place to answer a simple question: is life in Europe getting more expensive, and can ordinary people still afford a home? It covers 41 countries. That means all 27 EU members, the six Western Balkan countries (Albania, Bosnia and Herzegovina, Kosovo, Montenegro, North Macedonia and Serbia), plus the United Kingdom, Norway, Switzerland, Iceland, Türkiye, Ukraine, Moldova and Belarus. The data runs from 2004 to 2025, with the newest 2026 figures wherever they have been published.
 
-Every statistic comes from an official source (Eurostat, the OECD, the Bank for International Settlements, the World Bank, the Bank of Albania and Monstat). The one exception is clearly labelled: real home prices in euros per m², which no official body publishes for Europe, come from the Deloitte Property Index. Nothing is estimated, interpolated or filled with zeros. The site is a static snapshot that a scheduled job refreshes and re-validates every week — it is not live data.
+The whole site works in **English and Albanian (Shqip)**.
 
-## What's inside
+## Where the numbers come from
 
-| Section | What it shows |
-|---|---|
-| **Search** | A search button at the top (or press `/` or Ctrl+K) finds any country by name — including other spellings like “UK”, “Turkey” or “Kosova” — and opens its profile or adds it to the comparison. |
-| **Start here** | Plain-language questions that jump to the right section, four headline facts, and a four-term glossary (€ per m², index, EU = 100, missing data). |
-| **Country table** | All 41 countries in one searchable, sortable table: home price per m², cost of a 70 m² home, years of income, house price and rent changes, inflation, housing costs, housing stress, minimum wage, median income, young adults living with parents and price level. Tick up to five countries to compare, filter by region, download as CSV. |
-| **Calculator** | “Could you afford a home?” Enter your take-home pay, home size and savings rate: see the price, years of pay, years to save a deposit, the monthly mortgage (with your own rate, term and deposit), the size you could afford, and how long the same pay would take in every other country. Runs entirely in the browser. |
-| **Overview** | Four KPI cards — house price growth, rent inflation, housing costs as a share of income, price-to-income ratio — for the selected country, the EU-27 aggregate, or the median of a region (clearly labelled), with sparklines, change on the previous year, the benchmark and the latest 2026 reading. |
-| **Map** | Choropleth of Europe for 28 indicators — starting with real home prices in € per m², written on each country — a year slider with a play button, zoom to the Balkans, keyboard-accessible countries, rich tooltips (value, unit, change since the previous available year, benchmark, data status, source) and a distinct pattern for missing data. |
-| **Country panel** | Click a country for a profile with nine key measures, sparklines and 2026 partial-year readings; or see a live ranking when nothing is selected. |
-| **Trends** | Multi-country line charts with an EU-27 benchmark toggle and four views: original values, yearly change, change since a base year, and indexed (base year = 100). Plus a heatmap of every country and year. |
-| **Compare** | Two to five countries side by side: "did incomes keep up?" grouped bars, a key-figures table with status flags, and small multiples. |
-| **Affordability** | Plain-English explainers, an affordability ranking with explicit criteria and coverage, prices-vs-pay indexed chart, and a price level vs living standards scatter. |
-| **Cost of living** | Price levels by category (PPP-based, EU = 100) and inflation by category (HICP), with the difference between the two explained. |
-| **Sources & methods** | Full metadata for every indicator (definition, unit, dataset id, links to dataset and API, coverage, update date, flags, caveats), a coverage matrix, country groupings and known limitations. |
+Almost everything comes from official statistics: Eurostat, the OECD, the Bank for International Settlements, the World Bank, the Bank of Albania and Monstat (the statistics office of Montenegro).
 
-All filters (region, indicator, year, period, values mode, base year, benchmark, countries) and the language are kept in the URL, so any view can be shared — the **Share** button copies the link (or opens the phone’s share sheet). Shared links show a preview card with a map of home prices.
+There is one exception, and the site says so every time it appears. Nobody official publishes home prices in euros per square metre for Europe, so those come from the Deloitte Property Index.
 
-**Languages:** English and Albanian (Shqip). The EN / SQ switch translates the interface, country and indicator names, explanations and number formats; the sources & methods page stays in English. The choice is remembered, and Albanian is picked automatically for browsers set to Albanian.
+I never guess, fill in or smooth over missing years. If a country has no data, the site shows that clearly instead of pretending it is zero. The figures are a snapshot that gets refreshed and checked once a week, so they are recent but not live.
 
-## Data coverage
+## What you can do on the site
 
-Coverage is computed from the committed snapshot (`public/data/data.json`). "WB" lists the Western Balkan countries covered.
+* **Search for any country** with the button at the top (or press `/`). It understands other spellings too, like UK, Turkey or Kosova.
+* **Start with a question.** The opening section has plain questions such as "How much does a home cost?" that take you straight to the answer, plus a few headline facts and a tiny glossary.
+* **Explore the map.** Pick a measure, press play to watch the years go by, zoom into the Balkans, and hover over a country to see its numbers. Home prices per square metre are written right on the map.
+* **Use the country table.** All 41 countries in one place: home price per m², what a 70 m² home costs, how many years of income that is, house prices, rents, inflation, housing costs, minimum wage, median income, young adults living with their parents and the price level. Search it, sort it, filter by region, tick up to five countries to compare, or download it as a CSV file.
+* **Try the calculator.** Type in your monthly take home pay and see what a home would cost you: the price, how many years of pay that is, how long a deposit would take to save, what a mortgage would cost each month with your own interest rate, and how big a home you could realistically afford. It also shows how long the same pay would take in every other country. Everything is worked out on your own device and nothing is sent anywhere.
+* **Follow the trends.** Line charts from 2004 onwards with the EU average for comparison. You can switch between actual values, yearly change, change since a chosen year, or a growth index, plus a colourful grid showing every country and every year at once.
+* **Compare countries side by side.** For example Albania next to Belgium, or Serbia next to Germany, including a chart that asks "did incomes keep up with house prices?"
+* **Check affordability and the cost of living.** Rankings, plain English explanations, price levels for food, energy and transport, and what is driving inflation in each country.
+* **Share what you see.** Every view lives in the link, so the Share button sends someone exactly what you are looking at. Shared links show a preview card with a map of home prices.
+* **Read the sources.** A separate page explains every measure: where it comes from, what it means, which countries it covers, when it was last updated and what to watch out for.
 
-| Indicator | Countries | Years | Western Balkans | Source |
-|---|---|---|---|---|
-| **Home price per m² (€)** | 27 / 41 | 2025 (2024 for BA, SI, DK, FR) | AL, BA, ME, RS | Deloitte Property Index 2026 & 2025; Monstat (Montenegro) — not official statistics |
-| House price growth / index | 35 / 41 | 2004–2025 (+ Q2 2026) | AL, MK, RS | Eurostat `prc_hpi_a`, `prc_hpi_q`; BIS `WS_SPP`; Bank of Albania survey |
-| Real house prices | 30 / 41 | 2004–2025 | — | OECD analytical house prices |
-| House price-to-income ratio | 29 / 41 | 2004–2025 | — | OECD analytical house prices |
-| House price-to-rent ratio | 30 / 41 | 2004–2025 | — | OECD analytical house prices |
-| Rent inflation / rent index | 36 / 41 | 2004–2025 (+ Sep 2026) | AL, XK, ME, MK, RS | Eurostat HICP `prc_hicp_ainr`, `prc_hicp_minr` |
-| Housing cost overburden rate | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_lvho07a` |
-| Housing costs as a share of income | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_mded01` |
-| Consumer price inflation | 41 / 41 | 2004–2025 (+ Sep 2026) | all six | Eurostat HICP; World Bank CPI for BA, GB, UA, MD, BY |
-| Food, energy, transport, housing inflation | 36 / 41 | 2004–2025 (+ Sep 2026) | AL, XK, ME, MK, RS | Eurostat HICP |
-| Price levels (overall, food, housing, energy, transport, restaurants) | 37–38 / 41 | 2004–2024 | AL, BA, ME, MK, RS (+ XK for some) | Eurostat `prc_ppp_ind` |
-| Consumption and GDP per person in PPS | 37 / 41 | 2004–2024 | AL, BA, ME, MK, RS | Eurostat `prc_ppp_ind` |
-| Median household income (PPS, €, national currency) | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_di03` |
-| Minimum wage (€ a month, 1 January; latest July 2026) | 30 / 41 | 2004–2026 | AL, ME, MK, RS | Eurostat `earn_mw_cur` (countries without a statutory minimum wage show no data) |
-| Young adults (18–34) living with their parents | 37 / 41 | 2004–2025 | AL, XK, ME, MK, RS | Eurostat EU-SILC `ilc_lvps08` |
-| Average age of leaving the parental home | 34 / 41 | 2004–2025 | BA, ME, MK, RS | Eurostat `yth_demo_030` |
-| GDP per person (international $) | 41 / 41 | 2004–2025 | all six | World Bank `NY.GDP.PCAP.PP.CD` |
+## What the data covers
 
-Many series start after 2004 for individual countries (for example EU-SILC from 2013 in Serbia and 2017 in Albania; Kosovo has a single EU-SILC year). The coverage matrix on the methodology page shows the exact range for every country.
+Here is what the site has, roughly in order of how often people look for it.
 
-### Important gaps
+* **Home price per m² in euros:** 27 countries, 2025 (2024 for Bosnia, Slovenia, Denmark and France). Includes Albania, Bosnia, Montenegro and Serbia. Source: Deloitte Property Index and Monstat. Not official statistics.
+* **House price index and yearly growth:** 35 countries, 2004 to 2025, plus the second quarter of 2026. Includes Albania (from the Bank of Albania), North Macedonia and Serbia. Source: Eurostat, BIS and the Bank of Albania.
+* **Rents and rent inflation:** 36 countries, 2004 to 2025, plus September 2026. Includes Albania, Kosovo, Montenegro, North Macedonia and Serbia.
+* **Inflation:** all 41 countries, 2004 to 2025, plus September 2026. Food, energy, transport and housing inflation for 36 countries.
+* **Housing costs as a share of income** and **people overburdened by housing costs:** 37 countries, from the EU income survey.
+* **Minimum wage:** 30 countries, every January from 2004 to 2026, plus July 2026. Countries without a legal minimum wage show no data.
+* **Young adults aged 18 to 34 living with their parents:** 37 countries. **Average age of leaving home:** 34 countries.
+* **Median household income:** 37 countries, in euros, in purchasing power and in local currency.
+* **Price levels compared with the EU average:** around 38 countries, up to 2024, for everyday spending, food, housing, energy, transport and eating out.
+* **Price to income and price to rent ratios, real house prices:** around 30 countries, from the OECD.
+* **GDP per person:** all 41 countries.
 
-- **House prices:** Albania comes from the Bank of Albania's half-yearly survey index (2013, 2015–2025; not harmonised with Eurostat). Serbia and North Macedonia are covered via the BIS. No official index exists for Bosnia and Herzegovina, Kosovo or Montenegro.
-- **Prices in euros per m²** are not official statistics: they come from the Deloitte Property Index (mostly asking prices for new homes) and Monstat for Montenegro, for 2024–2025 only. Kosovo, North Macedonia, Bulgaria, the Baltic states, Sweden, Switzerland and others are not covered.
-- **Price-to-income ratios** are OECD-only: no Western Balkan country, Cyprus, Malta, Türkiye, Ukraine, Moldova or Belarus.
-- **Bosnia and Herzegovina** is missing from EU-SILC and HICP; **Ukraine, Moldova and Belarus** have only World Bank inflation and GDP.
-- **Purchasing power parities** end in 2024 (published with a lag).
-- Annual data end in **2025**; for **2026** only the latest monthly (HICP, September 2026) or quarterly (house prices, Q2 2026) year-on-year readings are shown, labelled as partial-year.
+### Gaps worth knowing about
 
-## Run it locally
+* There is no official house price index for Bosnia and Herzegovina, Kosovo or Montenegro. Albania's index comes from the Bank of Albania's own survey, which works differently from Eurostat's.
+* Bosnia and Herzegovina is missing from the EU income survey and from Eurostat's inflation data. Ukraine, Moldova and Belarus mostly only have inflation and GDP.
+* Many Balkan series start later than 2004. For example, Albania's income data starts in 2017 and Serbia's in 2013. The sources page shows the exact years for every country.
+* The OECD does not cover any Western Balkan country, so price to income ratios are missing there.
+* Yearly figures end in 2025. For 2026 the site only shows the latest month or quarter, clearly marked as part of the year.
 
-Requires Node.js 20 or newer.
+## Running it yourself
+
+You need Node.js 20 or newer.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # type-check and build to dist/
-npm run preview    # serve the production build
+npm run dev
 ```
 
-## Update the data
+Then open http://localhost:5173. To build the finished site, run `npm run build`.
+
+### Updating the data
 
 ```bash
-npm run data:fetch     # download all indicators from the official APIs → public/data/data.json
-npm run data:validate  # integrity checks (exit code 1 on failure)
-npm run data:geo       # rebuild map boundaries → public/data/europe.topo.json (rarely needed)
-npm run og             # redraw the link-preview image public/og.png from the current data
-npm run i18n:check     # list interface texts without an Albanian translation
+npm run data:fetch
+npm run data:validate
 ```
 
-- `scripts/config/countries.mjs` — country list, codes per source, regions and groupings.
-- `scripts/config/indicators.mjs` — indicator definitions, plain-English explanations, sources in priority order and caveats.
-- `scripts/sources/home-prices-m2.csv` — prices per m² transcribed from the Deloitte Property Index (PDF, published yearly in autumn) and Monstat's quarterly tables, with the basis of every figure. Update it by hand when a new edition appears.
-- `scripts/sources/albania-hpi.csv` — the Bank of Albania's half-yearly house price index. The pipeline downloads the latest survey spreadsheet automatically, checks it against this file, and falls back to it if the bank's site is unavailable. Refresh the file when a new half-year is published.
-- `scripts/fetch-data.mjs` — downloads and harmonises the data (Eurostat JSON-stat, OECD SDMX, BIS SDMX, World Bank API). No API keys are needed.
-- `scripts/validate-data.mjs` — checks unique country-years, year ranges, numeric values, plausible ranges, minimum coverage, recency, source attribution and map geometry.
-- `scripts/build-geo.mjs` — builds simplified TopoJSON from Natural Earth (EU point-of-view edition) with mapshaper.
+The first command downloads everything again from the official sources. The second runs a set of checks: no duplicate years, no impossible values, enough countries covered, and every number linked to its source. If anything looks wrong it stops.
 
-To add an indicator, add an entry to `indicators.mjs`, run `npm run data:fetch && npm run data:validate`, and it appears in the selectors, map, charts and methodology page automatically.
+A few other helpful commands:
 
-## Deployment
+* `npm run og` redraws the preview image used when the link is shared.
+* `npm run i18n:check` lists any text that still needs an Albanian translation.
+* `npm run data:geo` rebuilds the map shapes (you will rarely need this).
 
-`.github/workflows/deploy.yml` builds and deploys to GitHub Pages:
-
-- **On every push to `main`:** validates the committed data, builds with `BASE_PATH=/<repo>/` and deploys.
-- **Every Monday at 05:17 UTC and on manual runs:** re-downloads all sources, runs the integrity checks, and only publishes the fresh data if they pass. If a single source is temporarily down, the indicators that depend on it keep their previous values and are labelled with their retrieval date; if the checks fail, the committed snapshot is published instead. Refreshed data are deployed, not committed, so the repository history contains only the author's commits.
-- **On pull requests:** validates and builds without deploying.
-
-**Known issue:** the OECD API currently answers requests from GitHub's runners with HTTP 500, so the scheduled job cannot refresh the three OECD indicators (real house prices, price-to-income and price-to-rent ratios). They keep their last values, and the site shows the date they were retrieved. To update them, run `npm run data:fetch` locally and commit `public/data/data.json`.
-
-To deploy your own copy: fork the repository, then in *Settings → Pages* set *Source* to *GitHub Actions*. GitHub pauses scheduled workflows in repositories with no activity for 60 days; re-enable it from the Actions tab if that happens.
-
-The app uses hash-based routing (`#/`, `#/methodology`) and relative asset paths, so it works under any repository path without a 404 fallback.
+All the settings live in the `scripts` folder. The list of countries and the list of measures are in `scripts/config`, and the two small tables I keep by hand (Deloitte's prices per m² and the Bank of Albania's index) are in `scripts/sources`. Adding a new measure usually means adding one entry to the measures list and running the two commands above.
 
 ### Translations
 
-Interface strings are written in English and wrapped in `t('…')`. Albanian versions live in `src/lib/sq.ts` (interface texts, country names, regions and indicator names/explanations). After adding or changing a text, run `npm run i18n:check` and add the missing Albanian lines; anything untranslated falls back to English.
+Every piece of text on the site is written in English and looked up in `src/lib/sq.ts` for the Albanian version. If something has no translation yet it simply shows in English.
 
-## Technology
+## How it goes online
 
-React 18, TypeScript, Vite, Apache ECharts (charts), d3-geo and d3-zoom (map), TopoJSON, flag-icons, Source Serif 4 and IBM Plex Sans. No backend, database or API keys.
+The site is hosted for free on GitHub Pages and rebuilds itself automatically:
 
-## Methodology in brief
+* Every time I push a change, it checks the data, builds the site and publishes it.
+* Every Monday morning it downloads fresh data, checks it, and only publishes it if everything passes. If one source happens to be down that day, the site keeps that source's previous numbers and shows when they were collected.
+* The fresh data is published but never committed, so the history of this repository only contains my own work.
 
-- One source per country and indicator; a country's line never silently mixes sources.
-- Status flags (provisional, estimated, break in series, low reliability, definition differs) are preserved and shown.
-- The EU-27 benchmark is always the official published aggregate; where no country is selected, KPI cards show a clearly labelled median.
-- Derived values are limited to BIS quarterly → annual averages (all four quarters required), rebasing to 2015 = 100, growth rates, and on-screen rebasing. All are documented on the methodology page.
-- Numbeo and other crowdsourced data are deliberately not used.
+One thing to know: the OECD currently refuses requests coming from GitHub's servers, so its three measures only update when I run the download on my own computer.
 
-## Licences
+To publish your own copy, fork the repository and set Pages to use GitHub Actions in the repository settings.
 
-Code: MIT (see `LICENSE`). Data remain under their providers' terms: Eurostat (© European Union, CC BY 4.0), OECD (CC BY 4.0), BIS (terms of use for statistics), World Bank (CC BY 4.0). Boundaries: Natural Earth (public domain).
+## Built with
+
+React, TypeScript and Vite, with Apache ECharts for the charts and d3 for the map. There is no server, no database and no API keys.
+
+## A few principles I stuck to
+
+* Each country's line comes from one source only, so different methods are never quietly mixed together.
+* Numbers that are provisional, estimated or affected by a change in method are marked as such.
+* The EU average is always the official figure published by the source, never something I calculated myself.
+* Crowdsourced websites like Numbeo are deliberately left out.
+
+## Licence
+
+The code is free to use under the MIT licence. The data belongs to its publishers and is shared under their terms (Eurostat, OECD and World Bank data under CC BY 4.0). Map shapes come from Natural Earth and are in the public domain.
 
 Kosovo: this designation is without prejudice to positions on status, and is in line with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of independence.
 
----
-
-Created by Kevin Elezi.
+Made by Kevin Elezi.
