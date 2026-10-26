@@ -167,6 +167,11 @@ function IndicatorMeta({ ind }: { ind: Indicator }) {
         <dt>In plain English</dt><dd>{ind.explainer}</dd>
         <dt>Definition</dt><dd>{ind.definition}</dd>
         <dt>Unit</dt><dd>{ind.unit}</dd>
+        <dt>Retrieved</dt>
+        <dd>
+          {ind.retrievedAt ? new Date(ind.retrievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+          {ind.stale && <span className="caveat-inline"> — the source could not be reached at the latest refresh, so these values come from the earlier retrieval.</span>}
+        </dd>
         <dt>Frequency</dt><dd>Annual{ind.latest ? `; latest ${latestPeriods.some((p) => p.includes('Q')) ? 'quarterly' : 'monthly'} reading shown for 2026 (${latestPeriods.join(', ')})` : ''}</dd>
         <dt>Sources</dt>
         <dd>

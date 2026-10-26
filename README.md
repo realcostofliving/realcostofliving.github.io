@@ -85,7 +85,7 @@ To add an indicator, add an entry to `indicators.mjs`, run `npm run data:fetch &
 `.github/workflows/deploy.yml` builds and deploys to GitHub Pages:
 
 - **On every push to `main`:** validates the committed data, builds with `BASE_PATH=/<repo>/` and deploys.
-- **Every Monday at 05:17 UTC and on manual runs:** re-downloads all sources, runs the integrity checks, and only publishes the fresh data if they pass. If a source is down or a check fails, the committed snapshot is published instead. Refreshed data are deployed, not committed, so the repository history contains only the author's commits.
+- **Every Monday at 05:17 UTC and on manual runs:** re-downloads all sources, runs the integrity checks, and only publishes the fresh data if they pass. If a single source is temporarily down, the indicators that depend on it keep their previous values and are labelled with their retrieval date; if the checks fail, the committed snapshot is published instead. Refreshed data are deployed, not committed, so the repository history contains only the author's commits.
 - **On pull requests:** validates and builds without deploying.
 
 To deploy your own copy: fork the repository, then in *Settings → Pages* set *Source* to *GitHub Actions*. GitHub pauses scheduled workflows in repositories with no activity for 60 days; re-enable it from the Actions tab if that happens.

@@ -62,6 +62,9 @@ export interface Indicator {
   benchmarkSeries: Obs[] | null;
   latest: Record<string, LatestObs> | null;
   latestBenchmark: LatestObs | null;
+  retrievedAt?: string;
+  /** True when the source was unreachable at the last refresh and older values are kept. */
+  stale?: boolean;
 }
 
 export interface Dataset {

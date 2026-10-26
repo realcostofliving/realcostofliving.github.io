@@ -97,6 +97,7 @@ export default function MapSection() {
             <p className="map-note">
               {covered} of {ids.length} countries have data for {filters.year}. Hatched countries have no comparable data — they are not low values.
               {isIndex ? ` An index shows change since ${indicator.indexBase}, not which country is more expensive.` : ''}
+              {indicator.stale && indicator.retrievedAt ? ` The source was unavailable at the last refresh; values were retrieved on ${new Date(indicator.retrievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
               {last < data.lastYear ? ` Annual data end in ${last}; 2026 readings appear in the country panel where published.` : ''}
             </p>
           </div>

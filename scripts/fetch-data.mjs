@@ -6,10 +6,12 @@
 //  - Observations are never invented, interpolated or set to zero when missing.
 //  - Each country's series comes from exactly one source (see config/indicators.mjs).
 //  - Source status flags (provisional, estimated, break in series...) are kept per observation.
+//  - If a source is temporarily unavailable, the indicators that depend on it keep the
+//    values from the previous snapshot, marked `stale` with their original retrieval date.
 //  - Only derived values: BIS quarterly indices -> annual averages (all four quarters
 //    required), rebased to 2015 = 100, and year-on-year growth from those averages.
 
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COUNTRIES, REGIONS, EXCLUDED, AGGREGATES } from './config/countries.mjs';
@@ -26,7 +28,7 @@ const byIso2 = new Map(COUNTRIES.map((c) => [c.id, c.id]));
 const datasetUpdated = {};
 
 // ---------------------------------------------------------------- helpers
-async function getJson(url, tries = 4) {
+async function getJson(url, tries = 5) {
   for (let i = 1; ; i++) {
     try {
       const res = await fetch(url, { headers: { 'User-Agent': 'europe-cost-of-living data pipeline', Accept: 'application/json' } });
@@ -34,12 +36,12 @@ async function getJson(url, tries = 4) {
       return await res.json();
     } catch (err) {
       if (i >= tries) throw new Error(`Failed to fetch ${url}: ${err.message}`);
-      await new Promise((r) => setTimeout(r, 1500 * i));
+      await new Promise((r) => setTimeout(r, 4000 * i));
     }
   }
 }
 
-async function getText(url, tries = 4) {
+async function getText(url, tries = 5) {
   for (let i = 1; ; i++) {
     try {
       const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (europe-cost-of-living data pipeline)' } });
@@ -47,7 +49,7 @@ async function getText(url, tries = 4) {
       return await res.text();
     } catch (err) {
       if (i >= tries) throw new Error(`Failed to fetch ${url}: ${err.message}`);
-      await new Promise((r) => setTimeout(r, 1500 * i));
+      await new Promise((r) => setTimeout(r, 4000 * i));
     }
   }
 }
@@ -252,10 +254,36 @@ function loader(src) {
 const allowed = (src, id) => (!src.only || src.only.includes(id)) && (!src.except || !src.except.includes(id));
 
 // ---------------------------------------------------------------- build
+async function previousSnapshot() {
+  try { return JSON.parse(await readFile(OUT, 'utf8')); } catch { return null; }
+}
+
 async function build() {
+  const prev = await previousSnapshot();
+  const now = new Date().toISOString();
   const indicators = [];
+  const stale = [];
   for (const ind of INDICATORS) {
     process.stdout.write(`• ${ind.id} … `);
+    try {
+      indicators.push(await buildIndicator(ind, now));
+    } catch (err) {
+      const old = prev?.indicators?.find((i) => i.id === ind.id);
+      if (!old) throw err;
+      console.log(`source unavailable (${err.message.slice(0, 160)}); keeping snapshot from ${old.retrievedAt ?? prev.generatedAt}`);
+      indicators.push({ ...old, retrievedAt: old.retrievedAt ?? prev.generatedAt, stale: true });
+      stale.push(ind.id);
+      for (const k of old.sourceKeys) if (!datasetUpdated[k] && prev.sources?.[k]?.updated) datasetUpdated[k] = prev.sources[k].updated;
+    }
+  }
+  if (stale.length > INDICATORS.length / 2) throw new Error(`Too many sources unavailable (${stale.length} indicators) — not writing a mostly stale snapshot.`);
+  if (stale.length) console.warn(`
+Kept previous values for: ${stale.join(', ')}`);
+  return writeOut(indicators, now);
+}
+
+async function buildIndicator(ind, now) {
+  {
     const series = {}, countrySource = {};
     let benchmark = null, benchmarkId = ind.benchmark, benchmarkSource = null;
     const usedSources = new Set();
@@ -289,8 +317,9 @@ async function build() {
     const all = Object.values(series).flat();
     const years = all.map((o) => o[0]);
     const { sources, latest: _l, ...rest } = ind;
-    indicators.push({
+    const built = {
       ...rest,
+      retrievedAt: now,
       sourceKeys: [...usedSources],
       benchmarkId: benchmark ? benchmarkId : null,
       benchmarkSource,
@@ -300,14 +329,17 @@ async function build() {
       benchmarkSeries: benchmark ? benchmark.map((o) => (o[2] ? o : o.slice(0, 2))) : null,
       latest,
       latestBenchmark,
-    });
+    };
     console.log(`${Object.keys(series).length} countries, ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'no data'}${latest ? `, latest for ${Object.keys(latest).length}` : ''}`);
+    return built;
   }
+}
 
+async function writeOut(indicators, now) {
   const sources = Object.fromEntries(Object.entries(SOURCE_INFO).map(([k, v]) => [k, { ...v, updated: datasetUpdated[k] ?? null }]));
   const data = {
     title: 'Europe: The Real Cost of Living',
-    generatedAt: new Date().toISOString(),
+    generatedAt: now,
     firstYear: FIRST_YEAR,
     lastYear: LAST_YEAR,
     countries: COUNTRIES.map(({ id, name, region, eu, wb, euro, iso3, ne }) => ({ id, name, region, eu, wb, euro, iso3, ne })),
