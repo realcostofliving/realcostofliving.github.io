@@ -84,7 +84,7 @@ export default function Calculator() {
       <div className="section-head">
         <p className="eyebrow">{t('Your own numbers')}</p>
         <h2 id="calc-title">{t('Could you afford a home?')}</h2>
-        <p className="lede">{t('Enter what you earn and see how long a home would take — to save for, or to pay off with a mortgage. Everything is calculated in your browser; nothing is sent anywhere.')}</p>
+        <p className="lede">{t('Enter what you earn and see how long a home would take, whether you save up for it or pay it off with a mortgage. Everything is calculated in your browser; nothing is sent anywhere.')}</p>
       </div>
       <div className="calc">
         <div className="card calc-inputs">
@@ -95,7 +95,7 @@ export default function Calculator() {
             </select>
           </label>
           <label className="field">
-            <span className="field-label">{t('Your take-home pay, € a month')}</span>
+            <span className="field-label">{t('Your monthly pay after tax, in €')}</span>
             <input className="calc-num" type="number" min={50} max={50000} step={50} value={pay} onChange={(e) => setPay(Math.max(50, +e.target.value || 50))} />
           </label>
           <div className="calc-chips">
@@ -124,7 +124,7 @@ export default function Calculator() {
               <p className="calc-big">{fmtEuroRound(price)}</p>
               <p className="calc-sub">{t('for a {size} m² home at about {m2} per m² ({basis})', { size, m2: euro(home.perM2), basis: t(PRICE_BASIS[home.basis ?? ''] ?? '').toLowerCase() })}</p>
               <div className="calc-stats">
-                <Stat big={fmt(yearsFull, 1)} unit={t('years')} text={t('of your full pay — if you spent nothing else')} />
+                <Stat big={fmt(yearsFull, 1)} unit={t('years')} text={t('of your full pay, if you spent nothing else')} />
                 <Stat big={fmt(yearsSaving, 1)} unit={t('years')} text={t('of saving {pct}% of your pay to buy it outright', { pct: save })} />
                 <Stat big={fmt(yearsDeposit, 1)} unit={t('years')} text={t('to save a {pct}% deposit of {v}', { pct: deposit, v: fmtEuroRound(depositAmt) })} />
               </div>
@@ -133,7 +133,7 @@ export default function Calculator() {
               <div>
                 <p className="eyebrow">{t('With a mortgage')}</p>
                 <p className="calc-pay">{euro(monthly)} <span>{t('a month for {n} years', { n: term })}</span></p>
-                <p className="calc-sub">{t('That is {pct}% of your take-home pay.', { pct: fmt(share, 0) })} <span className={`verdict ${verdict[0]}`}>{verdict[1]}</span></p>
+                <p className="calc-sub">{t('That is {pct}% of your pay after tax.', { pct: fmt(share, 0) })} <span className={`verdict ${verdict[0]}`}>{verdict[1]}</span></p>
                 <div className="meter" aria-hidden="true"><span style={{ width: `${Math.min(100, share)}%` }} className={verdict[0]} /><i style={{ left: '33%' }} /></div>
                 <p className="calc-note">{t('A common rule of thumb is to keep housing payments below a third of your income (the line on the bar).')}</p>
               </div>
@@ -155,7 +155,7 @@ export default function Calculator() {
           </div>
         </div>
         <EChart option={option} height={Math.max(260, others.length * 18 + 30)} ariaLabel={t('Years of your pay needed for a home in each country')} onClick={(p) => others[p.dataIndex] && (setCountry(others[p.dataIndex].id), selectCountry(others[p.dataIndex].id))} />
-        <p className="caption">{t('This assumes you earn the same pay everywhere — in reality pay differs a lot between countries, so use it to compare prices, not lives. Prices are national averages, mostly asking prices for new homes, and are not official statistics.')}</p>
+        <p className="caption">{t('This assumes you earn the same pay everywhere. In reality pay differs a lot between countries, so use it to compare prices, not lives. Prices are national averages, mostly asking prices for new homes, and are not official statistics.')}</p>
       </div>
     </section>
   );

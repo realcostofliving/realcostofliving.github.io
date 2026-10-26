@@ -169,13 +169,14 @@ export function median(values: number[]): number | undefined {
 }
 
 export function fmt(v: number | undefined, decimals = 1, unitShort = ''): string {
-  if (v === undefined || !Number.isFinite(v)) return '—';
+  if (v === undefined || !Number.isFinite(v)) return t('n/a');
   const n = Math.abs(v) >= 1000 ? v.toLocaleString(numLocale(), { maximumFractionDigits: 0 }) : v.toLocaleString(numLocale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-  return `${n}${unitShort}`;
+  // A real minus sign rather than a hyphen for negative numbers.
+  return `${n.replace(/^-/, "−")}${unitShort}`;
 }
 
 export function fmtSigned(v: number | undefined, decimals = 1, unitShort = ''): string {
-  if (v === undefined || !Number.isFinite(v)) return '—';
+  if (v === undefined || !Number.isFinite(v)) return t('n/a');
   const s = fmt(Math.abs(v), decimals, unitShort);
   return v > 0 ? `+${s}` : v < 0 ? `−${s}` : s;
 }

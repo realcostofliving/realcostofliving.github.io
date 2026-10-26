@@ -64,10 +64,13 @@ function Loaded({ raw, topo }: { raw: Dataset; topo: any }) {
       setPage(pageFromHash(location.hash));
       if (skipHash.current) { skipHash.current = false; return; }
       if (!location.hash.startsWith('#/methodology')) setFilters(filtersFromHash(data, location.hash));
+      // A link that names a language (?lang=sq or ?lang=en) switches to it.
+      const l = new URLSearchParams(location.hash.split('?')[1] ?? '').get('lang');
+      if (l === 'sq' || l === 'en') setLang(l);
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
-  }, [data]);
+  }, [data, setLang]);
 
   // Keep the URL in sync so any view can be shared.
   useEffect(() => {
@@ -120,7 +123,7 @@ function Loaded({ raw, topo }: { raw: Dataset; topo: any }) {
       reset,
       indicator: byId.get(filters.indicator)!,
       ind: (id: string) => byId.get(id)!,
-      countryName: (id: string) => (id === 'EU27' ? t('EU-27') : id === 'EA' ? t('Euro area') : names.get(id) ?? id),
+      countryName: (id: string) => (id === 'EU27' ? t('EU') : id === 'EA' ? t('Euro area') : names.get(id) ?? id),
       selectCountry,
       dashHref: `#/${langQuery(filtersToQuery(filters, defaults))}`,
       lang,

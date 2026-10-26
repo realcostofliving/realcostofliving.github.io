@@ -86,12 +86,12 @@ export default function FilterBar() {
           <button className="btn btn-ghost" onClick={reset}>{t('Reset')}</button>
           <div id="more-options" className={`more-options ${more ? 'open' : ''}`}>
           <div className="field">
-            <span className="field-label" id="period-label">{t('Charts from – to')}</span>
+            <span className="field-label" id="period-label">{t('Chart years')}</span>
             <div className="range" role="group" aria-labelledby="period-label">
               <select aria-label={t('Start year')} value={filters.startYear} onChange={(e) => set({ startYear: Math.min(+e.target.value, filters.endYear - 1) })}>
                 {allYears.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-              <span aria-hidden="true">–</span>
+              <span aria-hidden="true">{t('to')}</span>
               <select aria-label={t('End year')} value={filters.endYear} onChange={(e) => set({ endYear: Math.max(+e.target.value, filters.startYear + 1) })}>
                 {years(data.firstYear + 1, data.lastYear).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -125,7 +125,7 @@ export default function FilterBar() {
             <input type="checkbox" checked={filters.benchmark} onChange={(e) => set({ benchmark: e.target.checked })} />
             <span className="switch-track" aria-hidden="true" />
             <span className="field-label">{t('Average line')}</span>
-            <span className="switch-text">{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27')}</span>
+            <span className="switch-text">{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU')}</span>
           </label>
           </div>
         </div>

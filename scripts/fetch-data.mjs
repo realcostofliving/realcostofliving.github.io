@@ -372,7 +372,9 @@ async function build() {
       const old = prev?.indicators?.find((i) => i.id === ind.id);
       if (!old) throw err;
       console.log(`source unavailable (${err.message.slice(0, 160)}); keeping snapshot from ${old.retrievedAt ?? prev.generatedAt}`);
-      indicators.push({ ...old, retrievedAt: old.retrievedAt ?? prev.generatedAt, stale: true });
+      // Keep the old numbers, but always use the current texts and settings from the config.
+      const { sources: _s, latest: _l, ...meta } = ind;
+      indicators.push({ ...old, ...meta, retrievedAt: old.retrievedAt ?? prev.generatedAt, stale: true });
       stale.push(ind.id);
       for (const k of old.sourceKeys) if (!datasetUpdated[k] && prev.sources?.[k]?.updated) datasetUpdated[k] = prev.sources[k].updated;
     }

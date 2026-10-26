@@ -53,7 +53,7 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const facts = [
   [`${fmt(price('AL'))}`, 'per m² in Albania'],
   [`${fmt(price('DE'))}`, 'per m² in Germany'],
-  [`×${albaniaX}`, `Albanian house prices, 2015–${alLast[0]}`],
+  [`×${albaniaX}`, `Albanian house prices, 2015 to ${alLast[0]}`],
 ];
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">

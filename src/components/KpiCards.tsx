@@ -22,7 +22,7 @@ export default function KpiCards() {
   const subject: Subject = filters.focus
     ? { kind: 'country', id: filters.focus, label: countryName(filters.focus) }
     : filters.region === 'EU'
-      ? { kind: 'aggregate', id: 'EU27', label: t('EU-27 (official aggregate)') }
+      ? { kind: 'aggregate', id: 'EU27', label: t('EU average (official figure)') }
       : { kind: 'median', id: 'median', label: filters.region === 'ALL' ? t('The typical country in Europe') : t('The typical country in {region}', { region: regionLabel }) };
 
   return (
@@ -36,9 +36,9 @@ export default function KpiCards() {
         </div>
         <p className="kpi-note">
           {subject.kind === 'median'
-            ? t('No country chosen yet, so these are middle values across all countries with data — not an official EU figure. Click a country on the map or search for one to see its own numbers.')
+            ? t('No country chosen yet, so these are middle values across all countries with data, not an official EU figure. Click a country on the map or search for one to see its own numbers.')
             : subject.kind === 'aggregate'
-              ? t('Official EU-27 aggregate as published by the source. The price-to-income ratio has no EU aggregate, so the euro area is shown.')
+              ? t('The official EU figure as published by the source. House prices relative to income have no EU figure, so the euro area is shown instead.')
               : t('Click another country on the map, or clear the selection to return to the regional view.')}
         </p>
       </div>
@@ -73,7 +73,7 @@ function Kpi({ indicator, subject }: { indicator: Indicator; subject: Subject })
   const tone = deltaTone(indicator, delta);
   const lastAvail = !cur ? series.filter((o) => o[0] <= year).pop() ?? series[series.length - 1] : undefined;
   const bench = filters.benchmark && indicator.benchmarkSeries && subject.kind !== 'aggregate' ? obsAt(indicator.benchmarkSeries, year) : undefined;
-  const benchName = indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27');
+  const benchName = indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU');
   const latest = subject.kind === 'country' ? indicator.latest?.[subject.id] : subject.kind === 'aggregate' ? indicator.latestBenchmark : undefined;
   const flags = subject.kind !== 'median' && cur ? describeFlag(cur[2]) : [];
   const deltaUnit = indicator.kind === 'rate' || indicator.unitShort === '%' ? ' pp' : ' pts';

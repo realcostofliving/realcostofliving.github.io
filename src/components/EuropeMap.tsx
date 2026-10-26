@@ -285,7 +285,7 @@ function MapTooltip({ id, x, y, w, h }: { id: string; x: number; y: number; w: n
         )}
         {bench && filters.benchmark && (
           <div>
-            <dt>{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27')}</dt>
+            <dt>{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU')}</dt>
             <dd>{rate ? fmtSigned(bench[1], indicator.decimals, indicator.unitShort) : fmtValue(indicator, bench[1])}</dd>
           </div>
         )}

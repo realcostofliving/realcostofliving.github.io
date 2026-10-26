@@ -11,9 +11,9 @@ import { numLocale, t } from '../lib/i18n';
 const RANK = ['overburden', 'housing_cost_share', 'living_with_parents', 'pti', 'hpi_growth', 'rent_growth', 'pli_housing', 'median_income_pps'];
 
 const METRICS: { id: string; title: string; body: string }[] = [
-  { id: 'pti', title: 'House price-to-income ratio', body: 'Are homes rising faster than what people earn? Above 100 means homes are less affordable relative to income than in 2015.' },
+  { id: 'pti', title: 'House prices relative to income', body: 'Are homes rising faster than what people earn? Above 100 means homes are less affordable relative to income than in 2015.' },
   { id: 'housing_cost_share', title: 'Housing costs as a share of income', body: 'The slice of a typical household’s income that goes on rent or mortgage interest, utilities and upkeep.' },
-  { id: 'hpi', title: 'House price index & growth', body: 'How fast prices move. An index of 150 means prices are 50% higher than in 2015 — it is not the price of a home.' },
+  { id: 'hpi', title: 'House price index & growth', body: 'How fast prices move. An index of 150 means prices are 50% higher than in 2015. It is not the price of a home.' },
   { id: 'rent_index', title: 'Rent price index & growth', body: 'How fast rents paid by tenants are rising, from the official consumer price index.' },
   { id: 'overburden', title: 'Housing cost overburden', body: 'The share of people spending more than 40% of their disposable income on housing. Higher means more housing stress.' },
   { id: 'aic_pps', title: 'Purchasing power', body: 'How much people can actually consume after adjusting for price differences, compared with the EU average (100).' },
@@ -90,14 +90,14 @@ function HomePrices() {
         <div className="chart-head">
           <div>
             <h3 className="chart-title">{t('How many years of income is that?')}</h3>
-            <p className="chart-unit">{t('Price of a {size} m² home ÷ median disposable income per person (EU-SILC)', { size: TYPICAL_HOME_M2 })}</p>
+            <p className="chart-unit">{t('Price of a {size} m² home ÷ median disposable income per person (EU income survey)', { size: TYPICAL_HOME_M2 })}</p>
           </div>
         </div>
         <EChart option={bar(byYears, (r) => +r.h.years!.toFixed(1), (v) => t('{n} yrs', { n: fmt(v, 1) }))} height={h} ariaLabel={t('Years of median income needed for a home, by country')} onClick={(p) => byYears[p.dataIndex] && selectCountry(byYears[p.dataIndex].id)} />
       </div>
       <p className="caption home-caption">
         <strong>{t('Real prices, read with care.')}</strong>{' '}
-        {t('These are average prices per square metre — mostly asking prices for new homes — collected by Deloitte’s national offices from national sources, not official harmonised statistics; Montenegro uses its statistics office. Capitals and coasts cost far more than the national average (Tirana is about €2,100/m² against €1,720 for Albania). “Years of income” divides the price by the median person’s yearly disposable income after tax and benefits (a couple earns roughly 1.5 times that), so it shows how hard buying is, ignoring savings, mortgages and interest. Countries in brackets only have a 2024 price.')}
+        {t('These are average prices per square metre, mostly asking prices for new homes, collected by Deloitte’s national offices from national sources, not official harmonised statistics; Montenegro uses its statistics office. Capitals and coasts cost far more than the national average (Tirana is about €2,100/m² against €1,720 for Albania). “Years of income” divides the price by the median person’s yearly disposable income after tax and benefits (a couple earns roughly 1.5 times that), so it shows how hard buying is, ignoring savings, mortgages and interest. Countries in brackets only have a 2024 price.')}
         {rows.length < data.countries.filter((c) => inRegion(c, filters.region)).length ? ` ${t('Covers {n} of {total} countries in this region.', { n: rows.length, total: data.countries.filter((c) => inRegion(c, filters.region)).length })}` : ''}
       </p>
     </div>
@@ -112,7 +112,7 @@ function Explainer({ id, title, body }: { id: string; title: string; body: strin
       <h3>{title}</h3>
       <p>{body}</p>
       <p className="explainer-foot">
-        {t('{n} countries', { n: i.coverage.countries })} · {i.coverage.first}–{i.coverage.last}
+        {t('{n} countries', { n: i.coverage.countries })} · {t('{from} to {to}', { from: i.coverage.first, to: i.coverage.last })}
         <button className="linklike" onClick={() => { set({ indicator: id }); document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' }); }}>{t('Show on map →')}</button>
       </p>
     </article>
@@ -155,7 +155,7 @@ function Ranking() {
         barMaxWidth: 12,
         data: rows.map((r) => ({ value: r.o![1], itemStyle: { color: selected.get(r.id) ?? '#a9bcd2', borderRadius: [0, 3, 3, 0] } })),
         label: { show: true, position: 'right', color: INK_3, fontSize: 10, formatter: (p: any) => fmt(p.value, indicator.decimals) },
-        markLine: bench ? { symbol: 'none', silent: true, lineStyle: { color: '#2b2f3a', width: 1.5, type: 'solid' }, label: { formatter: indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU-27'), color: INK, fontSize: 10, position: 'end' }, data: [{ xAxis: bench[1] }] } : undefined,
+        markLine: bench ? { symbol: 'none', silent: true, lineStyle: { color: '#2b2f3a', width: 1.5, type: 'solid' }, label: { formatter: indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU'), color: INK, fontSize: 10, position: 'end' }, data: [{ xAxis: bench[1] }] } : undefined,
       },
     ],
   };
@@ -259,7 +259,7 @@ function KeptUp() {
           ? <>{t('Since {year}, house prices in {country} have grown', { year: base, country: countryName(id!) })} <strong>{fmt(Math.abs(gap), 0)} {t('percentage points')}</strong> {gap > 0 ? t('faster than median income') : t('slower than median income')} ({t('to {a} and {b}', { a: b![0], b: d![0] })}).</>
           : t('Not every series is available for this country and base year.')}
         {empty.length > 0 && ` ${t('No data: {list}.', { list: empty.join(', ') })}`}
-        {base !== filters.baseYear && ` ${t('The base year was moved from {from} to {to} because the data for {country} start later.', { from: filters.baseYear, to: base, country: countryName(id!) })}`} {t('Income is median equivalised household income in national currency (EU-SILC), so it compares the country with itself.')}
+        {base !== filters.baseYear && ` ${t('The base year was moved from {from} to {to} because the data for {country} start later.', { from: filters.baseYear, to: base, country: countryName(id!) })}`} {t('Income is median equivalised household income in national currency (EU income survey), so it compares the country with itself.')}
       </p>
     </div>
   );
@@ -294,8 +294,8 @@ function PriceVsWealth() {
     grid: { left: 8, right: 24, top: 36, bottom: 28, containLabel: true },
     legend: { top: 0, right: 0, textStyle: { color: INK, fontSize: 12 } },
     tooltip: { ...(baseOption().tooltip as object), formatter: (p: any) => `<b>${p.data.name}</b>, ${year}<br/>${t('Consumption per person')}: <b>${p.data.value[0]}</b> (${t('EU = 100')})<br/>${t('Price level')}: <b>${p.data.value[1]}</b> (${t('EU = 100')})` },
-    xAxis: { type: 'value', name: t('Consumption per person in purchasing power (EU-27 = 100) →'), nameLocation: 'middle', nameGap: 26, scale: true, ...axisCommon },
-    yAxis: { type: 'value', name: t('Price level (EU-27 = 100)'), nameLocation: 'end', scale: true, ...axisCommon },
+    xAxis: { type: 'value', name: t('Consumption per person in purchasing power (EU = 100) →'), nameLocation: 'middle', nameGap: 26, scale: true, ...axisCommon },
+    yAxis: { type: 'value', name: t('Price level (EU = 100)'), nameLocation: 'end', scale: true, ...axisCommon },
     series: [
       ...series,
       { type: 'scatter', data: [], markLine: { symbol: 'none', silent: true, lineStyle: { color: '#b9b0a0', width: 1, type: 'solid' }, label: { formatter: t('EU average'), color: INK_3, fontSize: 10, position: 'insideEndTop' }, data: [{ xAxis: 100 }, { yAxis: 100 }] } },
@@ -306,12 +306,12 @@ function PriceVsWealth() {
       <div className="chart-head">
         <div>
           <h3 className="chart-title">{t('Cheaper, but poorer? Prices and living standards, {year}', { year })}</h3>
-          <p className="chart-unit">{t('Both axes: EU-27 = 100 · Eurostat purchasing power parities')}</p>
+          <p className="chart-unit">{t('Both axes: EU average = 100 · Eurostat purchasing power parities')}</p>
         </div>
       </div>
       <EChart option={option} height={420} ariaLabel={t('Scatter plot of price levels against consumption per person, {year}', { year })} onClick={(p) => p.data?.id && selectCountry(p.data.id)} />
       <p className="caption">
-        {t('Countries to the bottom-left are cheap but households can afford less; top-right are expensive but richer. Western Balkan prices sit well below the EU average, but so does what people can consume. Kosovo, Ukraine, Moldova and Belarus are not covered by Eurostat’s purchasing power programme for this measure.')}
+        {t('Countries at the bottom left are cheap but households can afford less; those at the top right are expensive but richer. Western Balkan prices sit well below the EU average, but so does what people can consume. Kosovo, Ukraine, Moldova and Belarus are not covered by Eurostat’s purchasing power programme for this measure.')}
       </p>
     </div>
   );

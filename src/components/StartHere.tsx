@@ -36,7 +36,7 @@ export default function StartHere() {
       <div className="start-intro">
         <h2 id="start-title" className="start-title">{t('Is life in Europe getting more expensive?')} <span>{t('Find out for {n} countries.', { n: data.countries.length })}</span></h2>
         <p className="start-lede">
-          {t('This site puts official statistics on homes, rents, prices and incomes in one place — from Lisbon to Kyiv, with a close look at the Western Balkans.')}{' '}
+          {t('This site puts official statistics on homes, rents, prices and incomes in one place, from Lisbon to Kyiv, with a close look at the Western Balkans.')}{' '}
           {t('Start with a question, or')} <button className="linklike strong" onClick={openFinder}>{t('search for your country')}</button>.
         </p>
       </div>
@@ -49,7 +49,7 @@ export default function StartHere() {
           </>
         )}
         {growth.high && <Fact label={t('Fastest rise in house prices, {year}', { year: growth.year })} id={growth.high.id} name={countryName(growth.high.id)} value={fmtSigned(growth.high.o![1], 1, '%')} tone="up" onClick={() => { set({ indicator: 'hpi_growth', year: growth.year }); scrollToId('map'); }} />}
-        {parents.high && <Fact label={t('Most young adults living with parents, {year}', { year: parents.year })} id={parents.high.id} name={countryName(parents.high.id)} value={t('{v} of 18–34s', { v: `${fmt(parents.high.o![1], 0)}%` })} tone="up" onClick={() => { set({ indicator: 'living_with_parents', year: parents.year }); scrollToId('map'); }} />}
+        {parents.high && <Fact label={t('Most young adults living with parents, {year}', { year: parents.year })} id={parents.high.id} name={countryName(parents.high.id)} value={t('{v} of people aged 18 to 34', { v: `${fmt(parents.high.o![1], 0)}%` })} tone="up" onClick={() => { set({ indicator: 'living_with_parents', year: parents.year }); scrollToId('map'); }} />}
       </div>
 
       <ol className="questions">
@@ -71,7 +71,7 @@ export default function StartHere() {
         <div><dt>{t('€ per m²')}</dt><dd>{t('A real price: what one square metre of home costs.')}</dd></div>
         <div><dt>{t('Index (2015 = 100)')}</dt><dd>{t('Shows change over time, not a price. 150 = 50% more than in 2015.')}</dd></div>
         <div><dt>{t('EU = 100')}</dt><dd>{t('Compared with the EU average. 60 = 40% cheaper (or poorer) than average.')}</dd></div>
-        <div><dt>{t('“—” or stripes')}</dt><dd>{t('No comparable data. Never the same as zero.')}</dd></div>
+        <div><dt>{t('“n/a” or stripes')}</dt><dd>{t('No comparable data. Never the same as zero.')}</dd></div>
       </dl>
     </section>
   );

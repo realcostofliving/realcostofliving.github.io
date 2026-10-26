@@ -91,7 +91,7 @@ function PriceLevels() {
         formatter: (p: any) => {
           if (!p.data) return '';
           const f = describeFlag(p.data.flag);
-          return `<b>${p.seriesName}</b> · ${cats[p.data.value[1]]}<br/>${t('Price level')}: <b>${fmt(p.data.value[0], 0)}</b> (${t('EU-27 = 100')}), ${p.data.y}${f.length ? `<br/><span style="color:#6b7385">${f.join(', ')}</span>` : ''}`;
+          return `<b>${p.seriesName}</b> · ${cats[p.data.value[1]]}<br/>${t('Price level')}: <b>${fmt(p.data.value[0], 0)}</b> (${t('EU = 100')}), ${p.data.y}${f.length ? `<br/><span style="color:#6b7385">${f.join(', ')}</span>` : ''}`;
         },
       },
       xAxis: { type: 'value', scale: true, ...axisCommon },
@@ -107,7 +107,7 @@ function PriceLevels() {
       <div className="chart-head">
         <div>
           <h3 className="chart-title">{t('How expensive is it? Price levels by category, {year}', { year })}</h3>
-          <p className="chart-unit">{t('Price level index, EU-27 = 100 · Eurostat–OECD purchasing power parities')}</p>
+          <p className="chart-unit">{t('Price level index, EU average = 100 · purchasing power parities from Eurostat and the OECD')}</p>
         </div>
       </div>
       <EChart option={option} height={360} ariaLabel={t('Price levels by category for {countries}', { countries: ids.map(countryName).join(', ') })} />
@@ -138,7 +138,7 @@ function CategoryInflation() {
     legend: { top: 0, left: 0, icon: 'roundRect', itemWidth: 14, itemHeight: 4, textStyle: { color: INK, fontSize: 12 } },
     tooltip: { ...(baseOption().tooltip as object), trigger: 'axis', valueFormatter: (v: number) => fmtSigned(v, 1, '%') },
     xAxis: { type: 'category', data: xs.map(String), boundaryGap: false, ...axisCommon, splitLine: { show: false } },
-    yAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => `${v}%` } },
+    yAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => `${String(v).replace("-", "−")}%` } },
     series: available,
   };
   const latest = CPI.map(([k, label]) => ({ label, o: ind(k).latest?.[id], b: ind(k).latestBenchmark })).filter((x) => x.o);
@@ -160,7 +160,7 @@ function CategoryInflation() {
         <EChart option={option} height={340} ariaLabel={t('Inflation by category for {country}', { country: countryName(id) })} />
       ) : (
         <p className="empty">
-          {t('{country} does not publish a harmonised consumer price index with category detail to Eurostat. Only overall inflation (national CPI via the World Bank) is available — see the trend explorer.', { country: countryName(id) })}
+          {t('{country} does not publish a harmonised consumer price index with category detail to Eurostat. Only overall inflation (national CPI via the World Bank) is available, which you can see in the trend explorer.', { country: countryName(id) })}
         </p>
       )}
       {latest.length > 0 && (
@@ -172,7 +172,7 @@ function CategoryInflation() {
               {b && filters.benchmark && <span className="muted"> ({t('EU')} {fmtSigned(b.v, 1, '%')})</span>}
             </span>
           ))}
-          <span className="muted small">{t('Year-on-year, {period}', { period: periodLabel(latest[0].o!.p) })}</span>
+          <span className="muted small">{t('Change on a year earlier, {period}', { period: periodLabel(latest[0].o!.p) })}</span>
         </div>
       )}
     </div>

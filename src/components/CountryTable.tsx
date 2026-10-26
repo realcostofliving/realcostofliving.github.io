@@ -28,7 +28,7 @@ const COLS: Col[] = [
   { key: 'overburden', ind: 'overburden', label: 'Struggling', hint: '% spending 40%+ of income on housing' },
   { key: 'min_wage', ind: 'min_wage', label: 'Minimum wage', hint: '€ a month, before tax' },
   { key: 'median_income_pps', ind: 'median_income_pps', label: 'Median income', hint: 'per person, a year (PPS)' },
-  { key: 'living_with_parents', ind: 'living_with_parents', label: 'Live with parents', hint: '% of 18–34-year-olds' },
+  { key: 'living_with_parents', ind: 'living_with_parents', label: 'Live with parents', hint: '% of people aged 18 to 34' },
   { key: 'pli', ind: 'pli', label: 'Price level', hint: 'EU average = 100' },
 ];
 
@@ -85,7 +85,7 @@ export default function CountryTable() {
   };
 
   const downloadCsv = () => {
-    const head = [t('Country'), ...COLS.map((c) => `${t(c.label)} (${t(c.hint)})`), ...COLS.map((c) => `${t(c.label)} – ${t('year')}`)];
+    const head = [t('Country'), ...COLS.map((c) => `${t(c.label)} (${t(c.hint)})`), ...COLS.map((c) => `${t(c.label)}: ${t('year')}`)];
     const lines = shown.map((r) => [r.c.name, ...COLS.map((c) => (r.cells[c.key].v === undefined ? '' : String(Math.round(r.cells[c.key].v! * 10) / 10))), ...COLS.map((c) => String(r.cells[c.key].y ?? ''))]);
     const csv = [head, ...lines].map((l) => l.map((x) => (/[",]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(',')).join('\n');
     const a = document.createElement('a');
@@ -167,7 +167,7 @@ export default function CountryTable() {
         </div>
         <p className="caption">
           {t('Showing {n} of {total} countries.', { n: shown.length, total: data.countries.length })}{' '}
-          {t('Cell colours follow the map: darker orange means more expensive or faster rising, blue means falling. “—” means no comparable data.')}{' '}
+          {t('Cell colours follow the map: darker orange means more expensive or faster rising, blue means falling. “n/a” means no comparable data.')}{' '}
           {t('Home prices are not official statistics (Deloitte Property Index; Montenegro: Monstat). Years of income = price of a 70 m² home ÷ median yearly disposable income per person.')}{' '}
           <a href="#/methodology">{t('Where the numbers come from →')}</a>
         </p>
@@ -177,7 +177,7 @@ export default function CountryTable() {
 }
 
 function Td({ col, cell, indicator, year }: { col: Col; cell: Cell; indicator?: Indicator; year: number }) {
-  if (cell.v === undefined) return <td className="na">—</td>;
+  if (cell.v === undefined) return <td className="na">{t('n/a')}</td>;
   let text: string;
   if (col.derived === 'home') text = fmtEuroRound(cell.v);
   else if (col.derived === 'years') text = t('{n} yrs', { n: fmt(cell.v, 1) });

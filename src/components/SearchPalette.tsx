@@ -95,7 +95,7 @@ function Finder({ onClose }: { onClose: () => void }) {
             ref={input}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={t('Type a country — Albania, Germany, Kosovo…')}
+            placeholder={t('Type a country, for example Albania, Germany or Kosovo')}
             aria-label={t('Country name')}
             role="combobox"
             aria-expanded="true"

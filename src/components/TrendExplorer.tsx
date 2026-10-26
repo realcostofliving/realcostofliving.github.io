@@ -56,7 +56,7 @@ export function lineSeries(ind: Indicator, ids: string[], mode: ValueMode, baseY
     });
   });
   if (benchmark && ind.benchmarkSeries) {
-    const label = ind.benchmarkId === 'EA' ? t('Euro area') : t('EU-27');
+    const label = ind.benchmarkId === 'EA' ? t('Euro area') : t('EU');
     out.push({
       name: label,
       type: 'line',
@@ -115,7 +115,7 @@ export default function TrendExplorer() {
   return (
     <section id="trends" className="section" aria-labelledby="trends-title">
       <div className="section-head">
-        <p className="eyebrow">{t('Historical trends')} · {filters.startYear}–{filters.endYear}</p>
+        <p className="eyebrow">{t('Historical trends')} · {t('{from} to {to}', { from: filters.startYear, to: filters.endYear })}</p>
         <h2 id="trends-title">{t('How have costs changed over two decades?')}</h2>
         <p className="lede">{t('Compare countries over time. Switch to “Growth index” to see who has seen the fastest rise, whatever their starting level.')}</p>
       </div>
@@ -129,7 +129,7 @@ export default function TrendExplorer() {
       <div className="card chart-card">
         <div className="chart-head">
           <div>
-            <h3 className="chart-title">{indicator.label}{mode !== 'original' ? ` — ${t(MODE_LABELS[mode]).toLowerCase()}${mode === 'change' || mode === 'index' ? ` ${filters.baseYear}` : ''}` : ''}</h3>
+            <h3 className="chart-title">{indicator.label}{mode !== 'original' ? `: ${t(MODE_LABELS[mode]).toLowerCase()}${mode === 'change' || mode === 'index' ? ` ${filters.baseYear}` : ''}` : ''}</h3>
             <p className="chart-unit">{unit}</p>
           </div>
           <div className="chart-tools">
@@ -151,12 +151,12 @@ export default function TrendExplorer() {
         <p className="caption">
           {indicator.explainer}
           {filters.mode !== mode && ` ${t('Indicator is already a rate of change, so original values are shown.')}`}
-          {' '}{t('Hollow points are provisional, estimated or mark a break in the series. Gaps mean the source has no observation — nothing is filled in.')}
+          {' '}{t('Hollow points are provisional, estimated or mark a break in the series. Gaps mean the source has no observation. Nothing is filled in.')}
         </p>
         {(missing.length > 0 || noBase.length > 0) && (
           <p className="notice">
             {missing.length > 0 && <>{t('No data for {countries} on this measure.', { countries: missing.join(', ') })} </>}
-            {noBase.length > 0 && <>{t('{countries}: no observation in {year}, so the series cannot be rebased — try another base year.', { countries: noBase.join(', '), year: filters.baseYear })}</>}
+            {noBase.length > 0 && <>{t('{countries}: no observation in {year}, so the series cannot be rebased. Try another base year.', { countries: noBase.join(', '), year: filters.baseYear })}</>}
           </p>
         )}
       </div>
@@ -167,7 +167,7 @@ export default function TrendExplorer() {
           <thead><tr><th>{t('Country')}</th>{xs.map((y) => <th key={y}>{y}</th>)}</tr></thead>
           <tbody>
             {series.map((s: any) => (
-              <tr key={s.name}><th>{s.name}</th>{s.data.map((d: any, i: number) => <td key={i}>{d ? fmt(d.value[1], indicator.decimals) : '—'}</td>)}</tr>
+              <tr key={s.name}><th>{s.name}</th>{s.data.map((d: any, i: number) => <td key={i}>{d ? fmt(d.value[1], indicator.decimals) : t('n/a')}</td>)}</tr>
             ))}
           </tbody>
         </table>

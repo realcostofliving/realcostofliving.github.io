@@ -70,7 +70,7 @@ export default function MapSection() {
                 <span key={i} className="legend-item">
                   <span className="legend-swatch" style={{ background: b.color }} />
                   <span className="legend-label">
-                    {b.from === undefined ? `< ${fmt(b.to, b.to! % 1 ? 1 : 0)}` : b.to === undefined ? `≥ ${fmt(b.from, b.from % 1 ? 1 : 0)}` : `${fmt(b.from, b.from % 1 ? 1 : 0)}–${fmt(b.to, b.to % 1 ? 1 : 0)}`}
+                    {b.from === undefined ? `< ${fmt(b.to, b.to! % 1 ? 1 : 0)}` : b.to === undefined ? `≥ ${fmt(b.from, b.from % 1 ? 1 : 0)}` : `${fmt(b.from, b.from % 1 ? 1 : 0)} ${t('to')} ${fmt(b.to, b.to % 1 ? 1 : 0)}`}
                   </span>
                 </span>
               ))}
@@ -96,10 +96,10 @@ export default function MapSection() {
               <span className="timeline-year">{filters.year}</span>
             </div>
             <p className="map-note">
-              {t('{n} of {total} countries have data for {year}.', { n: covered, total: ids.length, year: filters.year })} {t('Hatched countries have no comparable data — they are not low values.')}
+              {t('{n} of {total} countries have data for {year}.', { n: covered, total: ids.length, year: filters.year })} {t('Hatched countries have no comparable data. That is not the same as a low value.')}
               {isIndex ? ` ${t('An index shows change since {year}, not which country is more expensive.', { year: indicator.indexBase! })}` : ''}
               {indicator.snapshot ? ` ${t('Countries without a figure for the chosen year show their latest earlier one, marked in the tooltip.')}` : ''}
-              {indicator.id === 'price_m2' ? ` ${t('Prices per m² are compiled by Deloitte from national sources (Montenegro: Monstat) — they are not official, harmonised statistics.')}` : ''}
+              {indicator.id === 'price_m2' ? ` ${t('Prices per m² are compiled by Deloitte from national sources (Montenegro: Monstat). They are not official, harmonised statistics.')}` : ''}
               {indicator.stale && indicator.retrievedAt ? ` ${t('The source was unavailable at the last refresh; values were retrieved on {date}.', { date: new Date(indicator.retrievedAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) })}` : ''}
               {last < data.lastYear ? ` ${t('Annual data end in {year}; 2026 readings appear in the country panel where published.', { year: last })}` : ''}
             </p>

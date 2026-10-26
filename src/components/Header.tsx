@@ -23,7 +23,7 @@ export default function Header({ page }: { page: 'dashboard' | 'methodology' }) 
     <header className="masthead">
       <div className="masthead-inner">
         <div className="masthead-top">
-          <a className="wordmark" href={dashHref} aria-label={t('Europe: The Real Cost of Living — home')}>
+          <a className="wordmark" href={dashHref} aria-label={t('Europe: The Real Cost of Living, home page')}>
             <span className="wordmark-kicker">{t('Europe')}</span>
             <span className="wordmark-title">{t('The Real Cost of Living')}</span>
           </a>

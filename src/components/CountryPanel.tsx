@@ -91,7 +91,7 @@ function Profile({ id }: { id: string }) {
               </li>
             ))}
           </ul>
-          <p className="muted small">{t('Year-on-year change in the latest published month or quarter. Not an annual figure.')}</p>
+          <p className="muted small">{t('Change on a year earlier, in the latest published month or quarter. Not an annual figure.')}</p>
         </div>
       )}
       <div className="profile-actions">
@@ -105,7 +105,7 @@ function Profile({ id }: { id: string }) {
           {t('Compare {country}', { country: c.name })}
         </button>
         <button className="btn btn-ghost" onClick={() => { set({ countries: [id] , benchmark: true }); document.getElementById('trends')?.scrollIntoView({ behavior: 'smooth' }); }}>
-          {t('{country} vs EU-27', { country: c.name })}
+          {t('{country} vs EU', { country: c.name })}
         </button>
       </div>
     </div>
@@ -122,7 +122,7 @@ function HomeCost({ id }: { id: string }) {
       <p className="home-price">{fmtEuroRound(h.price)}</p>
       <p className="small">
         {t('for a {size} m² home at about {m2} per m²', { size: TYPICAL_HOME_M2, m2: `€${Math.round(h.perM2).toLocaleString(numLocale())}` })}
-        {h.years !== undefined && <> — {t('roughly')} <strong>{t('{n} years', { n: fmt(h.years, 1) })}</strong> {t('of a typical person’s disposable income')}</>}.
+        {h.years !== undefined && <>, {t('roughly')} <strong>{t('{n} years', { n: fmt(h.years, 1) })}</strong> {t('of a typical person’s disposable income')}</>}.
       </p>
     </div>
   );

@@ -13,7 +13,7 @@
 
 export const REGIONS = [
   { id: 'ALL', label: 'All European countries' },
-  { id: 'EU', label: 'European Union (EU-27)' },
+  { id: 'EU', label: 'European Union (27 countries)' },
   { id: 'WB', label: 'Western Balkans' },
   { id: 'N', label: 'Northern Europe' },
   { id: 'W', label: 'Western Europe' },
@@ -83,12 +83,12 @@ export const COUNTRIES = [
 // Countries deliberately left out, shown on the methodology page.
 export const EXCLUDED = [
   { name: 'Russia', reason: 'Most of its territory and population statistics extend far beyond Europe, and comparable housing and income series are not published by Eurostat or the OECD after 2022.' },
-  { name: 'Georgia, Armenia, Azerbaijan', reason: 'Often counted as transcontinental; they are not covered by the Eurostat house price, EU-SILC or HICP datasets used here.' },
-  { name: 'Andorra, Liechtenstein, Monaco, San Marino, Vatican City', reason: 'Micro-states with almost no data in the comparable datasets used here. They are drawn on the map as context only.' },
+  { name: 'Georgia, Armenia, Azerbaijan', reason: 'Often counted as transcontinental; they are not covered by the Eurostat house price, EU SILC or HICP datasets used here.' },
+  { name: 'Andorra, Liechtenstein, Monaco, San Marino, Vatican City', reason: 'Microstates with almost no data in the comparable datasets used here. They are drawn on the map as context only.' },
 ];
 
 // Official aggregates used as benchmarks, keyed by the source code.
 export const AGGREGATES = {
-  EU27: { id: 'EU27', name: 'EU-27', eurostat: 'EU27_2020', worldbank: 'EUU' },
+  EU27: { id: 'EU27', name: 'EU', eurostat: 'EU27_2020', worldbank: 'EUU' },
   EA: { id: 'EA', name: 'Euro area', oecd: 'EA' },
 };

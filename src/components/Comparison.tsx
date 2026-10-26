@@ -83,10 +83,10 @@ export default function Comparison() {
         axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(29,42,68,0.05)' } },
         formatter: (ps: any[]) =>
           `<b>${ps[0].axisValue}</b><br/>` +
-          ps.map((p) => `${p.marker}${countryName(ids[p.seriesIndex])}: <b>${p.data ? fmtSigned(p.data.value, 0, '%') : t('no data')}</b>${p.data ? ` <span style="color:#6b7385">${p.data.from}–${p.data.to}</span>` : ''}`).join('<br/>'),
+          ps.map((p) => `${p.marker}${countryName(ids[p.seriesIndex])}: <b>${p.data ? fmtSigned(p.data.value, 0, '%') : t('no data')}</b>${p.data ? ` <span style="color:#6b7385">${t('{from} to {to}', { from: p.data.from, to: p.data.to })}</span>` : ''}`).join('<br/>'),
       },
       xAxis: { type: 'category', data: GROWTH.map(([, l]) => t(l)), ...axisCommon, splitLine: { show: false }, axisLabel: { ...axisCommon.axisLabel, color: INK, fontSize: 12 } },
-      yAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => `${v}%` } },
+      yAxis: { type: 'value', ...axisCommon, axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => `${String(v).replace("-", "−")}%` } },
       series,
     };
   }, [ids, base, end, ind, countryName, starts]);
@@ -96,7 +96,7 @@ export default function Comparison() {
       <div className="section-head">
         <p className="eyebrow">{t('Country comparison')}</p>
         <h2 id="compare-title">{t('Side by side')}</h2>
-        <p className="lede">{t('Choose two to five countries — put a Balkan country next to Belgium, Germany, France or Austria and see how their paths differ.')}</p>
+        <p className="lede">{t('Choose two to five countries. Try putting a Balkan country next to Belgium, Germany, France or Austria and see how their paths differ.')}</p>
       </div>
       <div className="card picker-card">
         <CountryPicker min={1} />
@@ -112,7 +112,7 @@ export default function Comparison() {
         </div>
         <EChart option={growthOption} height={320} ariaLabel={t('Bar chart comparing growth in house prices, rents, consumer prices and income since {year}', { year: base })} />
         <p className="caption">
-          {t('Each bar compares a country with its own past, so differences in currencies and price levels cancel out. Income growth uses median household income in national currency (EU-SILC). If a series ends before {year}, the latest year is used and shown in the tooltip.', { year: end })}
+          {t('Each bar compares a country with its own past, so differences in currencies and price levels cancel out. Income growth uses median household income in national currency (EU income survey). If a series ends before {year}, the latest year is used and shown in the tooltip.', { year: end })}
           {shifted.length > 0 && (
             <>
               {' '}
@@ -133,7 +133,7 @@ export default function Comparison() {
       </div>
       <p className="callout">
         <strong>{t('Why these charts use indices, not euros.')}</strong>{' '}
-        {t('Official house price indices measure how prices change within each country; they are not prices per square metre and they cover different housing markets. Use them to compare speed of change. For actual prices in euros, see “Home prices (€ per m²)” on the map, in the table and in the calculator — those come from the Deloitte Property Index and are not official statistics.')}
+        {t('Official house price indices measure how prices change within each country; they are not prices per square metre and they cover different housing markets. Use them to compare speed of change. For actual prices in euros, see “Home prices (€ per m²)” on the map, in the table and in the calculator. Those come from the Deloitte Property Index and are not official statistics.')}
       </p>
     </section>
   );
@@ -198,7 +198,7 @@ function ComparisonTable() {
               const indicator = ind(k);
               const cell = (s: Obs[] | null | undefined) => {
                 const o = atOrBefore(s ?? undefined, filters.year);
-                if (!o) return <span className="na">—</span>;
+                if (!o) return <span className="na">{t('n/a')}</span>;
                 const f = describeFlag(o[2]);
                 return (
                   <>
@@ -215,7 +215,7 @@ function ComparisonTable() {
                     <span className="unit">{indicator.unit}</span>
                   </th>
                   {ids.map((id) => <td key={id}>{cell(indicator.series[id])}</td>)}
-                  {filters.benchmark && <td>{cell(indicator.benchmarkSeries)}{indicator.benchmarkSeries && <span className="yr">{indicator.benchmarkId === 'EA' ? 'EA' : 'EU-27'}</span>}</td>}
+                  {filters.benchmark && <td>{cell(indicator.benchmarkSeries)}{indicator.benchmarkSeries && <span className="yr">{indicator.benchmarkId === 'EA' ? t('Euro area') : t('EU')}</span>}</td>}
                 </tr>
               );
             })}
