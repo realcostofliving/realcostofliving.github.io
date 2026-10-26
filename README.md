@@ -88,6 +88,8 @@ To add an indicator, add an entry to `indicators.mjs`, run `npm run data:fetch &
 - **Every Monday at 05:17 UTC and on manual runs:** re-downloads all sources, runs the integrity checks, and only publishes the fresh data if they pass. If a single source is temporarily down, the indicators that depend on it keep their previous values and are labelled with their retrieval date; if the checks fail, the committed snapshot is published instead. Refreshed data are deployed, not committed, so the repository history contains only the author's commits.
 - **On pull requests:** validates and builds without deploying.
 
+**Known issue:** the OECD API currently answers requests from GitHub's runners with HTTP 500, so the scheduled job cannot refresh the three OECD indicators (real house prices, price-to-income and price-to-rent ratios). They keep their last values, and the site shows the date they were retrieved. To update them, run `npm run data:fetch` locally and commit `public/data/data.json`.
+
 To deploy your own copy: fork the repository, then in *Settings → Pages* set *Source* to *GitHub Actions*. GitHub pauses scheduled workflows in repositories with no activity for 60 days; re-enable it from the Actions tab if that happens.
 
 The app uses hash-based routing (`#/`, `#/methodology`) and relative asset paths, so it works under any repository path without a 404 fallback.
