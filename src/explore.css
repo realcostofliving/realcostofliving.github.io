@@ -213,3 +213,8 @@ kbd { font-family: var(--sans); font-size: 11px; border: 1px solid var(--rule-2)
   .result-list li { grid-template-columns: 1fr; gap: 2px; }
   .result-card { padding: 16px 16px 18px; }
 }
+
+/* A disabled button keeps its colour instead of turning grey on hover. */
+.btn:disabled:hover { background: inherit; }
+.calc-num.shake { animation: calc-shake 0.4s ease; border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(200, 85, 61, 0.2); }
+@keyframes calc-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }

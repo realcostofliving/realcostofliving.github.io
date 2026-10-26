@@ -19,28 +19,48 @@ function loanFor(pay: number, ratePct: number, years: number): number {
 const round50 = (v: number) => Math.max(50, Math.round(v / 50) * 50);
 const euro = (v: number) => `€${Math.round(v).toLocaleString(numLocale())}`;
 
+/**
+ * Read a pay amount the way people type it: "1200", "1.200", "1,200", "1 200", "€900" or "850,50".
+ * Returns NaN when there is no number at all.
+ */
+export function parsePay(text: string): number {
+  const s = text.replace(/[€\s\u00a0\u202f]/g, '').replace(/eur(o)?$/i, '');
+  if (!s) return NaN;
+  if (/^\d{1,3}([.,]\d{3})+$/.test(s)) return Number(s.replace(/[.,]/g, ''));
+  return Number(s.replace(',', '.'));
+}
+
 export default function Calculator() {
   const { data, filters, ind, countryName, selectCountry } = useApp();
+  // The calculator always uses the newest figures, whatever year is chosen on the map.
+  const Y = data.lastYear;
   const pm = ind('price_m2');
   const income = ind('median_income_eur');
   const minWage = ind('min_wage');
   const priced = data.countries.filter((c) => pm.series[c.id]);
   const [country, setCountry] = useState(() => (filters.focus && pm.series[filters.focus] ? filters.focus : 'AL'));
   const typicalPay = (id: string) => {
-    const o = obsAtOrBefore(income.series[id], filters.year);
+    const o = obsAtOrBefore(income.series[id], Y);
     return o ? round50(o[1] / 12) : undefined;
   };
   // The pay box keeps exactly what the person types; the sums use it once it is a real amount.
   const [payText, setPayText] = useState<string>(() => String(typicalPay(country) ?? 800));
   const setPay = (v: number) => setPayText(String(v));
-  const typed = Number(payText);
+  const typed = parsePay(payText);
   const payValid = Number.isFinite(typed) && typed >= 50;
   const pay = payValid ? typed : 50;
   const results = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(false);
   // The button opens a result card right where you are, so there is always something to see.
   const [open, setOpen] = useState(false);
-  const showResult = () => { if (payValid) setOpen(true); };
+  const payInput = useRef<HTMLInputElement>(null);
+  const [nudge, setNudge] = useState(false);
+  const showResult = () => {
+    if (payValid) { setNudge(false); setOpen(true); return; }
+    setNudge(true);
+    payInput.current?.focus();
+    payInput.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   const showDetails = () => {
     setOpen(false);
     results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -56,8 +76,8 @@ export default function Calculator() {
   // Follow the country picked on the map, if it has prices.
   useEffect(() => { if (filters.focus && pm.series[filters.focus]) setCountry(filters.focus); }, [filters.focus, pm]);
 
-  const home = homeCost(data, country, filters.year)!;
-  const mw = obsAtOrBefore(minWage.series[country], filters.year);
+  const home = homeCost(data, country, Y)!;
+  const mw = obsAtOrBefore(minWage.series[country], Y);
   const mwLatest = minWage.latest?.[country];
   const typical = typicalPay(country);
   const price = home ? home.perM2 * size : 0;
@@ -74,11 +94,11 @@ export default function Calculator() {
   const others = useMemo(
     () =>
       priced
-        .map((c) => ({ id: c.id, h: homeCost(data, c.id, filters.year) }))
+        .map((c) => ({ id: c.id, h: homeCost(data, c.id, Y) }))
         .filter((r) => r.h)
         .map((r) => ({ id: r.id, years: (r.h!.perM2 * size) / yearly, year: r.h!.year }))
         .sort((a, b) => a.years - b.years),
-    [priced, data, filters.year, size, yearly],
+    [priced, data, Y, size, yearly],
   );
 
   const option: any = {
@@ -113,14 +133,13 @@ export default function Calculator() {
           <label className="field">
             <span className="field-label">{t('Your monthly pay after tax, in €')}</span>
             <input
-              className="calc-num"
-              type="number"
-              inputMode="numeric"
-              min={50}
-              max={50000}
-              step={50}
+              ref={payInput}
+              className={`calc-num ${nudge && !payValid ? 'shake' : ''}`}
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               value={payText}
-              onChange={(e) => setPayText(e.target.value)}
+              onChange={(e) => { setPayText(e.target.value); setNudge(false); }}
               onKeyDown={(e) => { if (e.key === 'Enter') showResult(); }}
               aria-invalid={!payValid}
             />
@@ -148,7 +167,7 @@ export default function Calculator() {
             </p>
           )}
           {!payValid && <p className="calc-warn">{t('Enter your monthly pay (at least €50) to see a result.')}</p>}
-          <button className="btn calc-go" onClick={showResult} disabled={!payValid || !home}>
+          <button className="btn calc-go" onClick={showResult}>
             {t('See my result')}
           </button>
           <p className="calc-note">{t('The result also updates by itself as you change anything.')}</p>
