@@ -34,7 +34,7 @@ const datasetUpdated = {};
 async function getJson(url, tries = 5) {
   for (let i = 1; ; i++) {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'europe-cost-of-living data pipeline', Accept: 'application/json' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'realcostofliving data pipeline', Accept: 'application/json' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -47,7 +47,7 @@ async function getJson(url, tries = 5) {
 async function getText(url, tries = 5) {
   for (let i = 1; ; i++) {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (europe-cost-of-living data pipeline)' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (realcostofliving data pipeline)' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     } catch (err) {
@@ -267,7 +267,7 @@ async function boaHalfYears() {
       .map((m) => ({ url: new URL(m[1], BOA_PAGE).href, key: +m[3] * 10 + (m[2].toUpperCase() === 'II' ? 2 : 1) }))
       .sort((a, b) => b.key - a.key);
     if (!links.length) throw new Error('no survey table link found');
-    const res = await fetch(links[0].url, { headers: { 'User-Agent': 'Mozilla/5.0 (europe-cost-of-living data pipeline)' } });
+    const res = await fetch(links[0].url, { headers: { 'User-Agent': 'Mozilla/5.0 (realcostofliving data pipeline)' } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const XLSX = (await import('xlsx')).default ?? (await import('xlsx'));
     const wb = XLSX.read(new Uint8Array(await res.arrayBuffer()), { type: 'array' });

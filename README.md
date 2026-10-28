@@ -2,7 +2,7 @@
 
 **See what homes, rents and everyday life really cost across Europe, and whether pay is keeping up.**
 
-👉 **Open the site:** https://kevin19e.github.io/europe-cost-of-living/
+👉 **Open the site:** https://realcostofliving.github.io/
 
 I built this because I wanted one honest place to answer a simple question: is life in Europe getting more expensive, and can ordinary people still afford a home? It covers 41 countries. That means all 27 EU members, the six Western Balkan countries (Albania, Bosnia and Herzegovina, Kosovo, Montenegro, North Macedonia and Serbia), plus the United Kingdom, Norway, Switzerland, Iceland, Türkiye, Ukraine, Moldova and Belarus. The data runs from 2004 to 2025, with the newest 2026 figures wherever they have been published.
 
@@ -94,6 +94,8 @@ The site is hosted for free on GitHub Pages and rebuilds itself automatically:
 * The fresh data is published but never committed, so the history of this repository only contains my own work.
 
 One thing to know: the OECD currently refuses requests coming from GitHub's servers, so its three measures only update when I run the download on my own computer.
+
+The site lives in the free GitHub organization **realcostofliving**, which belongs to me, so its address has no personal name in it. The old address under my personal account forwards here automatically.
 
 To publish your own copy, fork the repository and set Pages to use GitHub Actions in the repository settings.
 

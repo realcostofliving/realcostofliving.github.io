@@ -90,7 +90,7 @@ export default function CountryTable() {
     const csv = [head, ...lines].map((l) => l.map((x) => (/[",]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
-    a.download = `europe-cost-of-living-${year}.csv`;
+    a.download = `realcostofliving_${year}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
